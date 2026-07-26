@@ -10,6 +10,8 @@ jobs:
   build-android:
     name: Build Android APK & Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
