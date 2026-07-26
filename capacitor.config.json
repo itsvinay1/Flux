@@ -1,0 +1,19 @@
+{
+  "appId": "com.flux.app",
+  "appName": "Flux",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0a0a18",
+      "showSpinner": false
+    }
+  }
+}

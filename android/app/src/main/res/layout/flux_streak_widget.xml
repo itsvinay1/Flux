@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FLUX STREAK"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="#0ea5e9"/>
+
+    <TextView
+        android:id="@+id/widget_streak_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔥 7 Days"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#0f172a"
+        android:layout_marginTop="6dp"/>
+
+    <TextView
+        android:id="@+id/widget_sub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to Flow"
+        android:textSize="10sp"
+        android:textColor="#94a3b8"
+        android:layout_marginTop="4dp"/>
+</LinearLayout>
