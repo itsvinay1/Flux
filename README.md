@@ -11,11 +11,23 @@
 
 **FLUX** is an AI-powered daily focus, habit building, and productivity application. Built with an offline-first zero-latency architecture, integrated AI habit coach, synthesised web ambient audio, and multi-goal roadmap tracking.
 
-[Features](#-key-features) • [Authentic App Showcase](#-authentic-app-screens-showcase) • [Architecture](#-architecture--tech-stack) • [Installation](#-getting-started) • [Security](#-security--privacy-architecture)
+### 📱 [📥 Download Android Release APK (v1.0.0)](docs/releases/FLUX-v1.0.0-Release.apk)
+
+[Download APK](#-download-android-release-apk) • [Features](#-key-features) • [Screenshots](#-authentic-app-screens-showcase) • [Architecture](#-architecture--tech-stack) • [Installation](#-getting-started) • [Security](#-security--privacy-architecture)
 
 ---
 
 </div>
+
+## 📥 Download Android Release APK
+
+You can download the compiled production release APK directly from the repository:
+
+- 📦 **Release Package**: [`FLUX-v1.0.0-Release.apk`](docs/releases/FLUX-v1.0.0-Release.apk) *(1.5 MB minified APK)*
+- 🔒 **Security**: Built with R8 code obfuscation (`minifyEnabled true`), ProGuard shrinking, and zero debug flags.
+- 📱 **Compatibility**: Android 8.0+ (API 26 and above).
+
+---
 
 ## 📸 Authentic App Screens Showcase
 
@@ -79,6 +91,8 @@ flux-app/
 ├── android/                   # Capacitor Native Android Project
 │   └── app/build.gradle       # Minified Release APK & ProGuard rules
 ├── docs/
+│   ├── releases/              # Compiled Release Binary APKs
+│   │   └── FLUX-v1.0.0-Release.apk
 │   └── screenshots/           # Authentic UI Screenshots
 │       ├── dashboard.png
 │       ├── ai_coach.png
