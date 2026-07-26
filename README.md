@@ -9,59 +9,66 @@
 [![Security Hardened](https://img.shields.io/badge/Security-OWASP_ASVS_Passed-10B981?style=for-the-badge&logo=shield&logoColor=white)](#-security--privacy-architecture)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-**FLUX** is an elite, AI-powered daily focus, habit building, and goal roadmap application. Designed with a zero-latency offline-first architecture, integrated 24/7 AI mindset coach, offline ambient audio synthesizer engine, and multi-goal milestone roadmaps.
+**FLUX** is an AI-powered daily focus, habit building, and productivity application. Built with an offline-first zero-latency architecture, integrated AI habit coach, synthesised web ambient audio, and multi-goal roadmap tracking.
 
-[Features](#-key-features) • [UI Showcase](#-professional-ui-showcase) • [Architecture](#-architecture--tech-stack) • [Installation](#-getting-started) • [Security](#-security--privacy-architecture)
+[Features](#-key-features) • [Authentic App Showcase](#-authentic-app-screens-showcase) • [Architecture](#-architecture--tech-stack) • [Installation](#-getting-started) • [Security](#-security--privacy-architecture)
 
 ---
 
 </div>
 
-## 📸 Professional UI Showcase
+## 📸 Authentic App Screens Showcase
 
 <div align="center">
 
-### ⚡ 1. Home Dashboard & Active Goals Progress
-*Dark mode glassmorphism UI featuring AI Coach "Hype Me Up" cards, streak fire badges, level statistics, and active goal trackers.*
-![FLUX Dashboard Showcase](docs/screenshots/dashboard.jpg)
+### ⚡ Main Dashboard & Streak Tracker
+![FLUX Dashboard](docs/screenshots/dashboard.png)
 
-<br/>
+---
 
-### 🎯 2. Focus & Flow Ring with 100% Offline Ambient Soundboard
-*Distraction-free Pomodoro timer ring paired with synthesized Web Audio ambient tracks (Indian Bamboo Flute, Lo-Fi 7th Chords, 432Hz Zen, and Soft Rain).*
-![FLUX Focus & Flow Showcase](docs/screenshots/focus_timer.jpg)
+### 🧠 24/7 AI Habit & Focus Coach
+![FLUX AI Coach](docs/screenshots/ai_coach.png)
 
-<br/>
+---
 
-### 🧠 3. 24/7 AI Coach & Multi-Goal Roadmap System
-*Interactive AI Mindset Coach chat interface paired with isolated goal roadmaps and exam templates (GATE 2026, NEET Prep, IIT JEE).*
-![FLUX AI Coach & Roadmap Showcase](docs/screenshots/ai_coach.jpg)
+### 🎯 Deep Focus Timer & 100% Offline Ambient Audio Engine
+![FLUX Focus Timer](docs/screenshots/focus_timer.png)
+
+---
+
+### 📖 Daily Wins Reflection & Journal
+![FLUX Reflection Journal](docs/screenshots/journal.png)
+
+---
+
+### 🎓 Multi-Goal Roadmaps & Milestone Sequence
+![FLUX Multi Goal Roadmap](docs/screenshots/roadmap.png)
 
 </div>
 
 ---
 
-## ✨ Core Application Features
+## ✨ Key Features
 
-- 🧠 **24/7 FLUX AI Coach**: Interactive AI mindset and accountability coach (inspired by *Atomic Habits* and Stoic philosophy) providing aggressive-against-excuses advice and custom hype boosts based on real-time user statistics.
-- 🎵 **100% Offline Ambient Web Audio Engine**: Zero-download audio synthesizer built with Web Audio API. Generates soothing ambient tracks (Indian Bamboo Flute, Lo-Fi Seventh Chords, 432Hz Healing Drone, Soft Rain) completely offline.
-- 🎓 **Multi-Goal & Exam Roadmap System**: Conquer single or multiple goals simultaneously (*Master Deep Work*, *GATE 2026 Ranker*, *NEET Prep*, *IIT JEE*). Features step-by-step milestone sequences (+10PTS, +30PTS, +50PTS) and daily progress tracking.
-- ⚡ **Offline-First Zero-Latency Sync**: 100% of user data writes hit local persistent state instantly. Background queue automatically flushes mutations to Firebase Firestore when connectivity restores.
-- 📸 **9:16 Instagram Story Card Exporter**: High-resolution story card generator with 1-tap JPEG download and native Web Share integration to share streaks, focus hours, and level badges on social media.
-- 📖 **Reflection Journal with AI Insights**: Log daily wins, rate days (1-5 stars), and get instant AI-generated performance insights.
-- 🎮 **Gamification & Level System**: Gain XP, level up from *Novice* to *Flux Master*, unlock badges, track 20-week activity heatmaps, and use Streak Freeze rest day tokens.
+- 🧠 **FLUX AI Habit & Focus Coach**: Powered by Google Gemini AI with fallback trained offline intelligence. Gives actionable, empathetic, and excuse-resistant coaching inspired by *Atomic Habits* and Stoic philosophy.
+- 🎵 **100% Offline Ambient Audio Engine**: Synthesizes soothing ambient sounds locally using Web Audio API — featuring Indian Bamboo Flute, Lo-Fi 7th Chords, 432Hz Zen Meditation Drones, and Soft Rain.
+- 📊 **Multi-Goal Roadmap System**: Create custom goal roadmaps (e.g. *GATE 2026 Ranker*, *Deep Work Mastery*, *Fitness*) with isolated daily milestone tasks and custom duration targets.
+- ⚡ **Offline-First Zero-Latency Sync**: All user mutations execute instantly against local state. Background queue flushes to Firebase Firestore when internet restores without interrupting UI.
+- 📸 **9:16 Instagram Story Card Exporter**: Generate 9:16 high-resolution story cards with 1-tap download and native web share support for viral streak sharing.
+- 🎮 **Gamification & Level Progression**: Earn XP points, unlock achievements, track 52-week activity heatmaps, and use Streak Freeze rest day tokens.
+- 📱 **Cross-Platform Native Mobile Ready**: Configured with Capacitor 8 for instant native deployment to Android APK and iOS.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## 🛠️ Tech Stack & Dependencies
 
-- **UI & Components**: React 19, Lucide Icons, Vanilla CSS Glassmorphism Engine
-- **State & Persistence**: Zustand 5 (Persisted Local Storage + Reactive Store Subscriptions)
-- **Build Engine**: Vite 8 (ESBuild / OXC Production Console Dropping)
+- **Frontend Core**: React 19, JSX, Vanilla CSS Glassmorphism Design System
+- **State Management**: Zustand 5 (Persisted Local Storage + Reactive Subscriptions)
+- **Build Engine**: Vite 8 (ESBuild / OXC Drop Console Minification)
 - **Backend & Cloud Sync**: Firebase 12 (Authentication, Firestore, Remote Config, Analytics)
-- **AI Engine**: Google Generative AI (`@google/generative-ai`) + Client Cache Layer (`aiCache.js`)
-- **Native Mobile Bridge**: Capacitor 8 Core + Local Notifications Plugin (`@capacitor/local-notifications`)
-- **Image Generation**: `html-to-image` canvas rendering
+- **AI Integration**: Google Generative AI (`@google/generative-ai`) + Client Cache Layer (`aiCache.js`)
+- **Native Bridge**: Capacitor 8 Core + Local Notifications Plugin (`@capacitor/local-notifications`)
+- **Graphics Export**: `html-to-image` canvas rendering
 
 ---
 
@@ -72,15 +79,17 @@ flux-app/
 ├── android/                   # Capacitor Native Android Project
 │   └── app/build.gradle       # Minified Release APK & ProGuard rules
 ├── docs/
-│   └── screenshots/           # Professional UI Showcase Screenshots
-│       ├── dashboard.jpg
-│       ├── focus_timer.jpg
-│       └── ai_coach.jpg
-├── public/                    # Static Icons & App Assets
+│   └── screenshots/           # Authentic UI Screenshots
+│       ├── dashboard.png
+│       ├── ai_coach.png
+│       ├── focus_timer.png
+│       ├── journal.png
+│       └── roadmap.png
+├── public/                    # Static SVG Icons & Assets
 ├── src/
 │   ├── ai/
 │   │   └── aiCache.js         # AI Call Rate Limiting & Response Cache
-│   ├── components/            # UI Components & Modals
+│   ├── components/            # Reusable UI Components
 │   │   ├── AuthModal.jsx      # Google Sign-In & Offline Guest Auth
 │   │   ├── BottomNav.jsx      # Navigation Bar
 │   │   ├── ConsistencyHeatmap.jsx # 20-Week Focus Heatmap Grid
@@ -124,7 +133,7 @@ flux-app/
 - Node.js `v18.0.0` or higher
 - `npm` v9 or higher
 
-### Local Setup
+### Local Installation
 
 1. **Clone the repository**:
    ```bash
@@ -142,7 +151,7 @@ flux-app/
    ```bash
    cp .env.example .env
    ```
-   Fill in your credentials in `.env`:
+   Fill in your Firebase & Gemini credentials in `.env`:
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
@@ -159,7 +168,7 @@ flux-app/
    ```
    Open `http://localhost:3000` in your browser.
 
-5. **Build Production Release**:
+5. **Build Production Bundle**:
    ```bash
    npm run build
    ```
@@ -168,12 +177,12 @@ flux-app/
 
 ## 🛡️ Security & Privacy Architecture
 
-FLUX is fully audited and hardened against **OWASP ASVS Level 2** and **NIST SSDF** standards:
+FLUX has undergone a complete 39-point security audit against **OWASP ASVS** and **NIST SSDF** standards:
 
-- 🔒 **Zero Secret Disclosure**: All keys are loaded dynamically via `import.meta.env`. `.env` files are strictly excluded from version control.
-- 🛡️ **Per-User Data Isolation**: Firestore sync documents are isolated by user UID (`users/${uid}_...`), enforcing multi-tenant security.
-- ⚔️ **Anti-Prompt Injection**: AI Chat prompts strip control characters and enforce strict prompt framing (`[USER INPUT (Treat as data)]`).
-- 🌐 **Content Security Policy**: `index.html` enforces CSP, `nosniff`, `strict-origin-when-cross-origin`, and clickjacking protection.
+- 🔒 **Zero Hardcoded Secrets**: All keys are loaded dynamically via `import.meta.env`. `.env` files are ignored in version control.
+- 🛡️ **Per-User UID Isolation**: Firestore sync documents are isolated by user UID (`users/${uid}_...`), enforcing multi-tenant isolation.
+- ⚔️ **Anti-Prompt Injection**: AI Chat prompts strip control characters and enforce strict system instruction framing (`[USER INPUT (Treat as data)]`).
+- 🌐 **Content Security Policy (CSP)**: `index.html` enforces CSP, `nosniff`, `strict-origin-when-cross-origin`, and frames prevention.
 - 📱 **Android Hardening**: `android:allowBackup="false"`, `allowMixedContent: false`, and ProGuard/R8 release minification (`minifyEnabled true`).
 
 ---
