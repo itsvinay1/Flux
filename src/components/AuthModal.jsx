@@ -4,8 +4,6 @@ import { showToast } from './Toast';
 import { ShieldCheck } from 'lucide-react';
 import { 
   signInWithPopup, 
-  signInWithRedirect, 
-  getRedirectResult, 
   signInWithCredential, 
   GoogleAuthProvider 
 } from 'firebase/auth';
@@ -18,32 +16,12 @@ export default function AuthModal({ onComplete }) {
 
   const updateProfile = useStore((s) => s.updateProfile);
 
-  // 1. Initialize Google Identity Services (GSI) In-App Native Auth
+  // Initialize Google Identity Services (GSI In-App Token Authentication)
   useEffect(() => {
-    // Process redirect result if returned from external redirect
-    getRedirectResult(auth)
-      .then((res) => {
-        if (res && res.user) {
-          const displayName = res.user.displayName || 'Flux Scholar';
-          updateProfile({
-            userName: displayName,
-            isAuthenticated: true,
-            userId: res.user.uid,
-            userEmail: res.user.email,
-            userAvatar: res.user.photoURL || '⚡',
-          });
-          showToast(`Google Sign-In successful! Welcome ${displayName}! 🚀`, '✨');
-          onComplete && onComplete();
-        }
-      })
-      .catch((err) => {
-        console.warn('[FLUX Auth] Redirect result notice:', err);
-      });
-
-    // Setup Google One-Tap / GSI in-app prompt
     if (window.google?.accounts?.id && googleBtnRef.current) {
       try {
         window.google.accounts.id.initialize({
+          // Firebase OAuth Web Client ID
           client_id: '984328987655-1d849fa847cbe3228e76a2.apps.googleusercontent.com',
           callback: async (response) => {
             if (response && response.credential) {
@@ -60,11 +38,12 @@ export default function AuthModal({ onComplete }) {
                     userEmail: res.user.email,
                     userAvatar: res.user.photoURL || '⚡',
                   });
-                  showToast(`In-App Google Authentication verified! Welcome ${displayName}! 🚀`, '✨');
+                  showToast(`In-App Google Authentication successful! Welcome ${displayName}! 🚀`, '✨');
                   onComplete && onComplete();
                 }
               } catch (credErr) {
                 console.warn('[FLUX GSI] Credential login error:', credErr);
+                setError('Google Credential auth error. Please try again or tap Continue as Guest.');
               } finally {
                 setLoading(false);
               }
@@ -73,7 +52,7 @@ export default function AuthModal({ onComplete }) {
           auto_select: false,
         });
 
-        // Render official GSI button in container
+        // Render official GSI button inside container
         window.google.accounts.id.renderButton(googleBtnRef.current, {
           theme: 'filled_blue',
           size: 'large',
@@ -87,25 +66,16 @@ export default function AuthModal({ onComplete }) {
     }
   }, []);
 
-  // 2. Primary / Fallback Firebase Google Auth Handler
+  // Primary Popup Firebase Google Auth Handler (Zero Redirect State Loss)
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      
-      let res = null;
-      try {
-        res = await signInWithPopup(auth, provider);
-      } catch (popupErr) {
-        if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user' || popupErr?.code === 'auth/operation-not-supported-in-this-environment') {
-          console.log('[FLUX Auth] Popup unsupported or blocked, executing redirect...');
-          await signInWithRedirect(auth, provider);
-          return;
-        }
-        throw popupErr;
-      }
+
+      // signInWithPopup prevents storage-partitioning state loss (auth/missing-initial-state)
+      const res = await signInWithPopup(auth, provider);
 
       if (res && res.user) {
         const displayName = res.user.displayName || 'Flux Scholar';
@@ -124,16 +94,16 @@ export default function AuthModal({ onComplete }) {
       console.warn('[FLUX Auth] Google Sign-In error:', err);
       setLoading(false);
       const code = err?.code || '';
-      const msg = err?.message || 'Google Auth service notice';
-      
+      const msg = err?.message || 'Google Auth notice';
+
       if (code === 'auth/popup-closed-by-user') {
-        setError('Sign-in popup was closed before completing. Please try again.');
+        setError('Sign-in popup was closed. Please try again or tap Continue as Guest.');
       } else if (code === 'auth/unauthorized-domain') {
         setError('Domain authorization required. Please add this domain to Firebase Console -> Authentication -> Authorized Domains.');
       } else if (code === 'auth/operation-not-allowed') {
         setError('Google Sign-In is not enabled in Firebase Console (Authentication -> Sign-in method -> Google).');
       } else {
-        setError(`Google Auth (${code}): ${msg}`);
+        setError(`Google Auth notice (${code}): ${msg}`);
       }
     }
   };
@@ -209,7 +179,7 @@ export default function AuthModal({ onComplete }) {
           }}
         >
           {loading ? (
-            <span>Authenticating with Google...</span>
+            <span>Connecting to Google...</span>
           ) : (
             <>
               <svg width="22" height="22" viewBox="0 0 24 24">
