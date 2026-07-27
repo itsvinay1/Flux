@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
 import { showToast } from './Toast';
 import { ShieldCheck } from 'lucide-react';
-import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
+import { 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult, 
+  signInWithCredential, 
+  GoogleAuthProvider 
+} from 'firebase/auth';
 import { auth } from '../firebase';
 
 export default function AuthModal({ onComplete }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const googleBtnRef = useRef(null);
 
   const updateProfile = useStore((s) => s.updateProfile);
 
-  // Catch mobile redirect return from Google OAuth
+  // 1. Initialize Google Identity Services (GSI) In-App Native Auth
   useEffect(() => {
+    // Process redirect result if returned from external redirect
     getRedirectResult(auth)
       .then((res) => {
         if (res && res.user) {
@@ -29,11 +37,57 @@ export default function AuthModal({ onComplete }) {
         }
       })
       .catch((err) => {
-        console.warn('[FLUX Auth] Redirect sign-in result notice:', err);
+        console.warn('[FLUX Auth] Redirect result notice:', err);
       });
+
+    // Setup Google One-Tap / GSI in-app prompt
+    if (window.google?.accounts?.id && googleBtnRef.current) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: '984328987655-1d849fa847cbe3228e76a2.apps.googleusercontent.com',
+          callback: async (response) => {
+            if (response && response.credential) {
+              setLoading(true);
+              try {
+                const credential = GoogleAuthProvider.credential(response.credential);
+                const res = await signInWithCredential(auth, credential);
+                if (res && res.user) {
+                  const displayName = res.user.displayName || 'Flux Scholar';
+                  updateProfile({
+                    userName: displayName,
+                    isAuthenticated: true,
+                    userId: res.user.uid,
+                    userEmail: res.user.email,
+                    userAvatar: res.user.photoURL || '⚡',
+                  });
+                  showToast(`In-App Google Authentication verified! Welcome ${displayName}! 🚀`, '✨');
+                  onComplete && onComplete();
+                }
+              } catch (credErr) {
+                console.warn('[FLUX GSI] Credential login error:', credErr);
+              } finally {
+                setLoading(false);
+              }
+            }
+          },
+          auto_select: false,
+        });
+
+        // Render official GSI button in container
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'filled_blue',
+          size: 'large',
+          width: 320,
+          shape: 'pill',
+          text: 'continue_with',
+        });
+      } catch (gsiErr) {
+        console.warn('[FLUX GSI] Setup notice:', gsiErr);
+      }
+    }
   }, []);
 
-  // Single Firebase Google Auth Handler
+  // 2. Primary / Fallback Firebase Google Auth Handler
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
@@ -41,22 +95,12 @@ export default function AuthModal({ onComplete }) {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       
-      const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
-
-      if (isNative) {
-        // On Native Mobile Android WebViews, use signInWithRedirect directly
-        // Deep link handler in AndroidManifest.xml routes back into FLUX app cleanly
-        console.log('[FLUX Auth] Native mobile platform detected, initiating Firebase OAuth redirect...');
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-
       let res = null;
       try {
         res = await signInWithPopup(auth, provider);
       } catch (popupErr) {
-        if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user') {
-          console.log('[FLUX Auth] Popup blocked or closed, falling back to Firebase Auth redirect...');
+        if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user' || popupErr?.code === 'auth/operation-not-supported-in-this-environment') {
+          console.log('[FLUX Auth] Popup unsupported or blocked, executing redirect...');
           await signInWithRedirect(auth, provider);
           return;
         }
@@ -80,18 +124,16 @@ export default function AuthModal({ onComplete }) {
       console.warn('[FLUX Auth] Google Sign-In error:', err);
       setLoading(false);
       const code = err?.code || '';
-      const msg = err?.message || 'Google Auth service unavailable';
+      const msg = err?.message || 'Google Auth service notice';
       
       if (code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing. Please try again.');
       } else if (code === 'auth/unauthorized-domain') {
-        setError('Domain authorization required. Please add this domain to Firebase Console -> Authentication -> Settings -> Authorized Domains.');
+        setError('Domain authorization required. Please add this domain to Firebase Console -> Authentication -> Authorized Domains.');
       } else if (code === 'auth/operation-not-allowed') {
         setError('Google Sign-In is not enabled in Firebase Console (Authentication -> Sign-in method -> Google).');
-      } else if (code === 'auth/network-request-failed') {
-        setError('Network request failed. Please check your connection or CORS settings.');
       } else {
-        setError(`Google Auth notice (${code}): ${msg}`);
+        setError(`Google Auth (${code}): ${msg}`);
       }
     }
   };
@@ -127,15 +169,15 @@ export default function AuthModal({ onComplete }) {
         <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px' }}>
           Welcome to FLUX
         </h1>
-        <p style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500, lineHeight: 1.5, marginBottom: '32px' }}>
-          Build daily discipline, master deep focus, and lock in your goals with Firebase Google Cloud Sync.
+        <p style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500, lineHeight: 1.5, marginBottom: '28px' }}>
+          Build daily discipline, master deep focus, and lock in your goals with Firebase Cloud Sync.
         </p>
 
         {/* Error Diagnostics Box */}
         {error && (
           <div style={{
             background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: '16px', padding: '14px 16px', marginBottom: '24px',
+            borderRadius: '16px', padding: '14px 16px', marginBottom: '20px',
             fontSize: '12px', color: '#fca5a5', fontWeight: 600, textAlign: 'left',
             lineHeight: 1.4,
           }}>
@@ -143,7 +185,16 @@ export default function AuthModal({ onComplete }) {
           </div>
         )}
 
-        {/* Single Primary Google Sign-In Button */}
+        {/* Official Google In-App GSI Button Container */}
+        <div 
+          ref={googleBtnRef} 
+          style={{ 
+            display: 'flex', justifyContent: 'center', marginBottom: '14px', 
+            minHeight: '44px' 
+          }} 
+        />
+
+        {/* Primary Google Auth Button */}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
@@ -158,7 +209,7 @@ export default function AuthModal({ onComplete }) {
           }}
         >
           {loading ? (
-            <span>Connecting to Google...</span>
+            <span>Authenticating with Google...</span>
           ) : (
             <>
               <svg width="22" height="22" viewBox="0 0 24 24">
@@ -172,7 +223,7 @@ export default function AuthModal({ onComplete }) {
           )}
         </button>
 
-        {/* Secondary Guest Access Button */}
+        {/* Guest Access Button */}
         <button
           onClick={() => {
             const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -202,10 +253,10 @@ export default function AuthModal({ onComplete }) {
         {/* Security Badge */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-          marginTop: '28px', fontSize: '11px', color: '#64748b', fontWeight: 600,
+          marginTop: '24px', fontSize: '11px', color: '#64748b', fontWeight: 600,
         }}>
           <ShieldCheck size={14} color="#38bdf8" />
-          <span>Protected by Firebase Identity &amp; Google Cloud Security</span>
+          <span>Protected by Firebase &amp; Google Identity Security</span>
         </div>
       </div>
     </div>
