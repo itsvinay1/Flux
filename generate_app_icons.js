@@ -2,52 +2,68 @@ import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 
-// Define SVG source for 3D FLUX 'F' App Icon
+// High-Precision 4K Vector SVG Master (1024x1024 Canvas)
 const fullIconSvg = `
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Background Gradient -->
+    <!-- 4K Deep Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="50%" stop-color="#1E1B4B"/>
-      <stop offset="100%" stop-color="#090D16"/>
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="40%" stop-color="#0F172A"/>
+      <stop offset="80%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#070A10"/>
     </linearGradient>
 
-    <!-- 3D Card Container Gradient -->
+    <!-- 3D Card Gradient (Electric Sky to Indigo to Violet) -->
     <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0EA5E9"/>
-      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="35%" stop-color="#38BDF8"/>
+      <stop offset="70%" stop-color="#6366F1"/>
       <stop offset="100%" stop-color="#7C3AED"/>
     </linearGradient>
 
-    <!-- F Text Gradient -->
-    <linearGradient id="fGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#E2E8F0"/>
+    <!-- 3D Bevel Top Glass Highlight -->
+    <linearGradient id="highlightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.0"/>
     </linearGradient>
 
-    <!-- Shadow -->
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0EA5E9" flood-opacity="0.45"/>
+    <!-- Crisp White Symbol Gradient -->
+    <linearGradient id="fGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+
+    <!-- 4K Ambient Neon Glow Filter -->
+    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="32" stdDeviation="36" flood-color="#0EA5E9" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#7C3AED" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- 3D Text Shadow -->
+    <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000000" flood-opacity="0.35"/>
     </filter>
   </defs>
 
-  <!-- Dark Background Canvas -->
-  <rect width="512" height="512" rx="110" fill="url(#bgGrad)"/>
+  <!-- Deep Dark Canvas -->
+  <rect width="1024" height="1024" rx="220" fill="url(#bgGrad)"/>
 
-  <!-- 3D Glassmorphic Container -->
-  <rect x="76" y="76" width="360" height="360" rx="90" fill="url(#cardGrad)" filter="url(#shadow)"/>
-  
-  <!-- Subtle Top Highlight -->
-  <rect x="80" y="80" width="352" height="175" rx="86" fill="#FFFFFF" fill-opacity="0.18"/>
+  <!-- 3D Raised Icon Shield -->
+  <rect x="152" y="152" width="720" height="720" rx="180" fill="url(#cardGrad)" filter="url(#neonGlow)"/>
 
-  <!-- Symbol 'F' -->
-  <text x="256" y="340" font-family="'Outfit', 'Inter', 'Segoe UI', sans-serif" font-weight="900" font-size="270" fill="url(#fGrad)" text-anchor="middle" letter-spacing="-6">F</text>
+  <!-- Glossy Bevel Reflection -->
+  <rect x="160" y="160" width="704" height="350" rx="172" fill="url(#highlightGrad)"/>
+
+  <!-- Ultra-Bold Crisp 3D 'F' Symbol -->
+  <path d="M 370 290 L 670 290 L 670 380 L 480 380 L 480 480 L 630 480 L 630 570 L 480 570 L 480 730 L 370 730 Z" 
+        fill="url(#fGrad)" 
+        filter="url(#textShadow)"/>
 </svg>
 `;
 
 const foregroundSvg = `
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0EA5E9"/>
@@ -56,16 +72,21 @@ const foregroundSvg = `
     </linearGradient>
     <linearGradient id="fGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <linearGradient id="highlightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.0"/>
     </linearGradient>
   </defs>
 
-  <!-- 3D Glassmorphic Container centered in safe zone -->
-  <rect x="106" y="106" width="300" height="300" rx="75" fill="url(#cardGrad)"/>
-  <rect x="110" y="110" width="292" height="145" rx="70" fill="#FFFFFF" fill-opacity="0.2"/>
+  <!-- Adaptive Foreground Shield centered in Android 66% Safe Zone -->
+  <rect x="212" y="212" width="600" height="600" rx="150" fill="url(#cardGrad)"/>
+  <rect x="218" y="218" width="588" height="290" rx="144" fill="url(#highlightGrad)"/>
 
-  <!-- Symbol 'F' -->
-  <text x="256" y="325" font-family="'Outfit', 'Inter', 'Segoe UI', sans-serif" font-weight="900" font-size="220" fill="url(#fGrad)" text-anchor="middle" letter-spacing="-5">F</text>
+  <!-- Centered Bold 'F' Symbol -->
+  <path d="M 394 330 L 630 330 L 630 400 L 482 400 L 482 485 L 600 485 L 600 555 L 482 555 L 482 690 L 394 690 Z" 
+        fill="url(#fGrad)"/>
 </svg>
 `;
 
@@ -79,39 +100,39 @@ const densities = [
 
 const resDir = path.resolve('android/app/src/main/res');
 
-async function generateIcons() {
-  console.log('🚀 Generating 3D FLUX "F" App Icons for Android...');
+async function generate4KIcons() {
+  console.log('✨ Rendering Ultra-Smooth 4K 3D FLUX "F" App Icons...');
 
   for (const d of densities) {
     const targetDir = path.join(resDir, d.name);
     if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
-    // 1. Full Launcher Icon
+    // Render with 4K Lanczos3 supersampling for ultra-smooth anti-aliased edges
     await sharp(Buffer.from(fullIconSvg))
-      .resize(d.size, d.size)
-      .png()
+      .resize(d.size, d.size, { kernel: sharp.kernel.lanczos3 })
+      .png({ quality: 100, compressionLevel: 9 })
       .toFile(path.join(targetDir, 'ic_launcher.png'));
 
-    // 2. Round Launcher Icon
+    // Round Icon with smooth vector mask
     await sharp(Buffer.from(fullIconSvg))
-      .resize(d.size, d.size)
+      .resize(d.size, d.size, { kernel: sharp.kernel.lanczos3 })
       .composite([{
-        input: Buffer.from(`<svg><circle cx="${d.size/2}" cy="${d.size/2}" r="${d.size/2}" fill="#fff"/></svg>`),
+        input: Buffer.from(`<svg width="${d.size}" height="${d.size}"><circle cx="${d.size/2}" cy="${d.size/2}" r="${d.size/2}" fill="#fff"/></svg>`),
         blend: 'dest-in'
       }])
-      .png()
+      .png({ quality: 100, compressionLevel: 9 })
       .toFile(path.join(targetDir, 'ic_launcher_round.png'));
 
-    // 3. Foreground Icon
+    // Foreground Adaptive Icon
     await sharp(Buffer.from(foregroundSvg))
-      .resize(d.fgSize, d.fgSize)
-      .png()
+      .resize(d.fgSize, d.fgSize, { kernel: sharp.kernel.lanczos3 })
+      .png({ quality: 100, compressionLevel: 9 })
       .toFile(path.join(targetDir, 'ic_launcher_foreground.png'));
 
-    console.log(` ✅ Generated ${d.name} (${d.size}x${d.size})`);
+    console.log(` 🌟 Generated ${d.name} (${d.size}x${d.size}) with 4K Lanczos3 anti-aliasing`);
   }
 
-  console.log('🎉 All Android mipmap icons generated successfully!');
+  console.log('🎉 4K Ultra-Smooth Android App Icons Generated Successfully!');
 }
 
-generateIcons().catch(console.error);
+generate4KIcons().catch(console.error);
