@@ -4,13 +4,21 @@ export default function SplashScreen({ onFinish }) {
   const [fadingOut, setFadingOut] = useState(false);
 
   useEffect(() => {
+    // Only show splash once per session to prevent glitching on re-render
+    const shown = sessionStorage.getItem('flux_splash_shown');
+    if (shown) {
+      onFinish && onFinish();
+      return;
+    }
+
     const timer = setTimeout(() => {
       setFadingOut(true);
+      sessionStorage.setItem('flux_splash_shown', 'true');
       const finishTimer = setTimeout(() => {
         onFinish && onFinish();
-      }, 500); // 500ms fade transition
+      }, 400);
       return () => clearTimeout(finishTimer);
-    }, 2200); // Display for 2.2 seconds
+    }, 1800); // 1.8 seconds optimal splash display
 
     return () => clearTimeout(timer);
   }, [onFinish]);
@@ -20,16 +28,18 @@ export default function SplashScreen({ onFinish }) {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
+        zIndex: 99999,
         background: 'radial-gradient(circle at 50% 40%, #1e1b4b 0%, #0f172a 70%, #090d16 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         opacity: fadingOut ? 0 : 1,
-        transition: 'opacity 0.5s ease, transform 0.5s ease',
-        transform: fadingOut ? 'scale(1.05)' : 'scale(1)',
+        transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: fadingOut ? 'scale(1.04)' : 'scale(1)',
         pointerEvents: fadingOut ? 'none' : 'auto',
+        willChange: 'opacity, transform',
+        backfaceVisibility: 'hidden',
       }}
     >
       {/* Background Ambient Glow Orbs */}

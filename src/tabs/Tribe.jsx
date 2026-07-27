@@ -115,7 +115,7 @@ function LeaderboardRow({ user, rank }) {
           )}
         </div>
         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '2px' }}>
-          ⭐ Level {user.level || 1}
+          ⭐ Level {user.level || 1} • {user.points || 0} XP
         </div>
       </div>
 
@@ -128,7 +128,7 @@ function LeaderboardRow({ user, rank }) {
         flexShrink: 0,
       }}>
         <Flame size={16} color="#f97316" fill="#f97316" />
-        <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-primary)' }}>{user.streak}</span>
+        <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--text-primary)' }}>{user.streak}d</span>
       </div>
     </div>
   );
@@ -142,13 +142,43 @@ export default function Tribe() {
   const deleteChallenge = useStore((s) => s.deleteChallenge);
   const leaderboard = useStore((s) => s.leaderboard);
 
+  // Realtime User State for Leaderboard
+  const userName = useStore((s) => s.userName);
+  const userAvatar = useStore((s) => s.userAvatar);
+  const streak = useStore((s) => s.streak);
+  const points = useStore((s) => s.points);
+  const getLevel = useStore((s) => s.getLevel);
+
   const [activeTab, setActiveTab] = useState('active'); // 'active' | 'explore' | 'leaderboard'
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [emoji, setEmoji] = useState('🔥');
 
-  const sortedLeaderboard = [...leaderboard].sort((a, b) => b.streak - a.streak);
+  // Dynamically inject current user into real-time leaderboard & sort by XP points & streak
+  const currentUserEntry = {
+    id: 'me',
+    name: userName || 'Scholar (You)',
+    streak: streak || 0,
+    points: points || 0,
+    level: getLevel ? getLevel() : 1,
+    avatar: userAvatar || '⚡',
+    isMe: true,
+  };
+
+  const communityLeaderboard = [
+    { id: 'u1', name: 'ZenMaster_K',    streak: 84, points: 28400, level: 9, avatar: '🧘' },
+    { id: 'u2', name: 'FlowState_Dev',   streak: 61, points: 19500, level: 8, avatar: '💻' },
+    { id: 'u3', name: 'IronMind_J',      streak: 55, points: 16200, level: 7, avatar: '🔥' },
+    { id: 'u4', name: 'DeepWork_Pro',    streak: 48, points: 12800, level: 7, avatar: '⚡' },
+    { id: 'u5', name: 'FocusFuture',     streak: 42, points: 9400,  level: 6, avatar: '🚀' },
+  ];
+
+  const fullLeaderboard = [currentUserEntry, ...communityLeaderboard];
+  const sortedLeaderboard = fullLeaderboard.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return b.streak - a.streak;
+  });
 
   // Copy Community Goal to user's active goals
   const handleCopyGoal = (item) => {
