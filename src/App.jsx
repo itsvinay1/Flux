@@ -31,9 +31,12 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
+  const authLoading = useStore((s) => s.authLoading);
+  const initAuthListener = useStore((s) => s.initAuthListener);
   const { toasts } = useToast();
 
   useEffect(() => {
+    initAuthListener();
     const cleanup = initNetworkListeners();
     scheduleStreakReminder();
     const done = localStorage.getItem('flux-onboarding-done');
@@ -41,7 +44,7 @@ export default function App() {
       setShowOnboarding(true);
     }
     return cleanup;
-  }, []);
+  }, [initAuthListener]);
 
   const ActiveComponent = TAB_COMPONENTS[activeTab];
 

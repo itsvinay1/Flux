@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getRemoteConfig, fetchAndActivate, getValue } from 'firebase/remote-config';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCHd2jNiUEInS9cot_AMBsi6cAHkJsu-XU",
@@ -18,6 +18,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+// Configure Local Session Persistence for reliable token retention across reloads
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn('[Firebase Auth] Persistence configuration notice:', err);
+});
+
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // Initialize Firebase Remote Config with default fallback parameters
 export const remoteConfig = getRemoteConfig(app);

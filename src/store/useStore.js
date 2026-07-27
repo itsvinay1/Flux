@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { writeData } from '../sync/syncManager';
+import { auth } from '../firebase';
+import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 
 // ─── Level System (Harder & Compounding Thresholds) ───────────────────────────
 const LEVEL_THRESHOLDS = [0, 300, 800, 1800, 3500, 6000, 10000, 16000, 25000, 38000, 55000];
@@ -97,6 +99,8 @@ const useStore = create(
   persist(
     (set, get) => ({
       // === User Profile & Auth ===
+      authLoading: true,
+      authInitialized: false,
       isAuthenticated: false,
       userId: null,
       userEmail: null,
@@ -108,6 +112,52 @@ const useStore = create(
       perfectFocusSessions: 0,
       totalTasksCompleted: 0,
       unlockedAchievements: [],
+
+      // Initialize Firebase Auth Realtime Listener
+      initAuthListener: () => {
+        if (get().authInitialized) return;
+        set({ authInitialized: true });
+
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            const displayName = user.displayName || user.email?.split('@')[0] || 'Scholar';
+            set({
+              isAuthenticated: true,
+              authLoading: false,
+              userId: user.uid,
+              userEmail: user.email,
+              userName: displayName,
+              userAvatar: user.photoURL || '⚡',
+            });
+          } else {
+            const currentUserId = get().userId;
+            // If user was using Firebase Auth and logged out
+            if (currentUserId && !currentUserId.startsWith('guest_')) {
+              set({
+                isAuthenticated: false,
+                authLoading: false,
+                userId: null,
+                userEmail: null,
+              });
+            } else {
+              set({ authLoading: false });
+            }
+          }
+        });
+      },
+
+      logoutUser: async () => {
+        try {
+          await firebaseSignOut(auth);
+        } catch (e) {
+          console.warn('[FLUX Auth] Firebase SignOut notice:', e);
+        }
+        set({
+          isAuthenticated: false,
+          userId: null,
+          userEmail: null,
+        });
+      },
 
       // === Gamification & Streak Freeze ===
       streak: 0,
