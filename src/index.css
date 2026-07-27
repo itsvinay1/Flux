@@ -159,12 +159,15 @@ body {
 .app-shell {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   background: var(--bg-primary);
   position: relative;
-  max-width: 430px;
+  max-width: 480px;
+  width: 100%;
   margin: 0 auto;
   overflow: hidden;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
 }
 
 /* Light gradient glow at top */
@@ -174,9 +177,9 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 430px;
-  height: 280px;
-  background: linear-gradient(to bottom, rgba(14,165,233,0.06) 0%, transparent 100%);
+  max-width: 480px;
+  height: 300px;
+  background: radial-gradient(circle at 50% 0%, rgba(14,165,233,0.12) 0%, transparent 75%);
   pointer-events: none;
   z-index: 0;
 }
@@ -188,13 +191,14 @@ body {
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  padding-bottom: calc(var(--nav-height) + 8px + var(--bottom-safe));
-  padding-top: calc(var(--status-bar-height) + 4px);
+  padding-bottom: calc(var(--nav-height) + 12px + var(--bottom-safe));
+  padding-top: max(12px, env(safe-area-inset-top));
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-page {
-  padding: 16px 20px;
+  padding: 16px 18px;
   animation: pageSlideUp 0.3s ease both;
 }
 
@@ -203,24 +207,33 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Page Header --- */
+/* --- 3D Floating Page Header --- */
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
-  padding-top: 12px;
+  margin-bottom: 22px;
+  padding: 16px 20px;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 26px;
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .page-title {
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -0.8px;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
   color: var(--text-primary);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .page-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin-top: 3px;
   font-weight: 500;
@@ -459,22 +472,24 @@ body {
   margin-top: 4px;
 }
 
-/* --- Bottom Navigation --- */
+/* --- 3D Floating Bottom Navigation --- */
 .bottom-nav {
   position: relative;
   z-index: 100;
   height: calc(var(--nav-height) + var(--bottom-safe));
   padding-bottom: var(--bottom-safe);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(30, 41, 59, 0.94);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border-top: 1px solid var(--glass-border);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 -10px 30px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
   border-radius: 28px 28px 0 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
-  padding-top: 12px;
+  padding-top: 10px;
   flex-shrink: 0;
 }
 
@@ -484,9 +499,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
   padding: 4px;
   border-radius: var(--radius-lg);
   background: none;
@@ -494,23 +509,32 @@ body {
   color: #94a3b8;
 }
 
-.nav-item:active { transform: scale(0.9); }
+.nav-item:active {
+  transform: translateY(2px) scale(0.92);
+}
 
-.nav-item.active { color: var(--accent-sky); transform: translateY(-2px); }
+.nav-item.active {
+  color: #38bdf8;
+  transform: translateY(-4px);
+}
 
 .nav-icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-normal);
+  transition: all 0.25s ease;
+  background: transparent;
 }
 
 .nav-item.active .nav-icon-wrap {
-  background: #e0f2fe;
-  box-shadow: 0 2px 8px rgba(14,165,233,0.15);
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #ffffff;
+  box-shadow: 
+    0 8px 20px rgba(14, 165, 233, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
 .nav-icon { width: 22px; height: 22px; }

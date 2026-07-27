@@ -79,19 +79,20 @@ export default function AuthModal({ onComplete }) {
       }}>
         {/* App Logo & Header */}
         <div style={{
-          width: 64, height: 64, borderRadius: '22px', margin: '0 auto 20px',
-          background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+          width: 72, height: 72, borderRadius: '24px', margin: '0 auto 20px',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #7c3aed 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '32px', color: '#fff', fontWeight: 900,
-          boxShadow: '0 8px 24px rgba(14, 165, 233, 0.4)',
+          fontSize: '40px', color: '#fff', fontWeight: 900,
+          boxShadow: '0 12px 30px -5px rgba(14, 165, 233, 0.5), inset 0 2px 3px rgba(255,255,255,0.4)',
+          letterSpacing: '-1px', userSelect: 'none',
         }}>
-          ⚡
+          F
         </div>
 
         <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px' }}>
           Welcome to FLUX
         </h1>
-        <p style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500, lineHeight: 1.5, marginBottom: '32px' }}>
+        <p style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500, lineHeight: 1.5, marginBottom: '28px' }}>
           Build daily discipline, master deep focus, and lock in your goals with Google Cloud sync.
         </p>
 
@@ -100,17 +101,19 @@ export default function AuthModal({ onComplete }) {
             background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)',
             color: '#fca5a5', padding: '14px 16px', borderRadius: '16px',
             fontSize: '13px', fontWeight: 600, marginBottom: '20px', textAlign: 'left',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
           }}>
-            <div style={{ marginBottom: '8px' }}>{error}</div>
+            <div style={{ marginBottom: '10px', lineHeight: 1.4 }}>{error}</div>
             <button
               onClick={handleGuestContinue}
               style={{
-                width: '100%', padding: '8px 12px', background: '#38bdf8', color: '#0f172a',
-                border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 800,
+                width: '100%', padding: '10px 14px', background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', color: '#0f172a',
+                border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: 800,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                boxShadow: '0 4px 14px rgba(56, 189, 248, 0.4)',
               }}
             >
-              <Zap size={14} /> Continue in Guest Mode Now
+              <Zap size={15} /> Continue in Guest Mode Now
             </button>
           </div>
         )}
@@ -125,9 +128,10 @@ export default function AuthModal({ onComplete }) {
             border: 'none', borderRadius: '20px',
             fontSize: '15px', fontWeight: 800, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-            boxShadow: '0 6px 20px rgba(255, 255, 255, 0.15)',
-            marginBottom: '16px', transition: 'all 0.2s ease',
+            boxShadow: '0 8px 24px rgba(255, 255, 255, 0.2), inset 0 2px 2px rgba(255,255,255,0.8)',
+            marginBottom: '14px', transition: 'all 0.2s ease',
             opacity: loading ? 0.7 : 1,
+            transform: 'translateY(0)',
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
@@ -144,14 +148,15 @@ export default function AuthModal({ onComplete }) {
           onClick={handleGuestContinue}
           style={{
             width: '100%', padding: '14px',
-            background: 'rgba(255,255,255,0.05)', color: '#94a3b8',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px',
-            fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+            background: 'rgba(255,255,255,0.06)', color: '#38bdf8',
+            border: '1px solid rgba(56,189,248,0.25)', borderRadius: '20px',
+            fontSize: '13.5px', fontWeight: 700, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
             transition: 'all 0.2s ease',
           }}
         >
-          <Zap size={14} color="#38bdf8" /> Continue Offline / Guest Mode
+          <Zap size={16} color="#38bdf8" /> Continue Offline / Guest Mode
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '28px', color: '#64748b', fontSize: '11px', fontWeight: 600 }}>

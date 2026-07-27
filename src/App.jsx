@@ -9,6 +9,7 @@ import Profile from './tabs/Profile';
 import AICoachChat from './tabs/AICoachChat';
 import OnboardingModal from './components/OnboardingModal';
 import AuthModal from './components/AuthModal';
+import SplashScreen from './components/SplashScreen';
 import { useToast, ToastContainer } from './components/Toast';
 import { initNetworkListeners } from './sync/syncManager';
 import { scheduleStreakReminder } from './utils/notificationManager';
@@ -27,6 +28,7 @@ const TAB_COMPONENTS = {
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const { toasts } = useToast();
@@ -45,6 +47,11 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {/* ⚡ App Splash Launch Screen */}
+      {showSplash ? (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      ) : null}
+
       {/* 🔐 Dedicated Google Authentication Screen */}
       {!isAuthenticated ? (
         <AuthModal onComplete={() => {
