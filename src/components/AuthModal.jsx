@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { showToast } from './Toast';
 import { Sparkles, ShieldCheck, Zap } from 'lucide-react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase';
 
 export default function AuthModal({ onComplete }) {
@@ -11,23 +11,62 @@ export default function AuthModal({ onComplete }) {
 
   const updateProfile = useStore((s) => s.updateProfile);
 
+  // Check redirect result on mobile redirect return
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((res) => {
+        if (res && res.user) {
+          const displayName = res.user.displayName || 'Flux Scholar';
+          updateProfile({
+            userName: displayName,
+            isAuthenticated: true,
+            userId: res.user.uid,
+            userEmail: res.user.email,
+            userAvatar: res.user.photoURL || '⚡',
+          });
+          showToast(`Google Sign-In successful! Welcome ${displayName}! 🚀`, '✨');
+          onComplete && onComplete();
+        }
+      })
+      .catch((err) => {
+        console.warn('[FLUX Auth] Redirect sign-in result notice:', err);
+      });
+  }, []);
+
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const res = await signInWithPopup(auth, provider);
-      const displayName = res.user.displayName || 'Flux Scholar';
-      updateProfile({
-        userName: displayName,
-        isAuthenticated: true,
-        userId: res.user.uid,
-        userEmail: res.user.email,
-        userAvatar: res.user.photoURL || '⚡',
-      });
-      showToast(`Google Sign-In successful! Welcome ${displayName}! 🚀`, '✨');
-      setLoading(false);
-      onComplete && onComplete();
+      // Configure Google Auth provider options
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
+      let res = null;
+      try {
+        res = await signInWithPopup(auth, provider);
+      } catch (popupErr) {
+        // If popup is blocked or unsupported (mobile), attempt redirect method
+        if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user') {
+          console.log('[FLUX Auth] Popup blocked/closed, attempting redirect...');
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+        throw popupErr;
+      }
+
+      if (res && res.user) {
+        const displayName = res.user.displayName || 'Flux Scholar';
+        updateProfile({
+          userName: displayName,
+          isAuthenticated: true,
+          userId: res.user.uid,
+          userEmail: res.user.email,
+          userAvatar: res.user.photoURL || '⚡',
+        });
+        showToast(`Google Sign-In successful! Welcome ${displayName}! 🚀`, '✨');
+        setLoading(false);
+        onComplete && onComplete();
+      }
     } catch (err) {
       console.warn('[FLUX Auth] Google Sign-In error:', err);
       setLoading(false);
@@ -36,13 +75,13 @@ export default function AuthModal({ onComplete }) {
       if (code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed before completing. Please try again.');
       } else if (code === 'auth/unauthorized-domain') {
-        setError('Firebase domain authorization pending for this domain. Click Guest Mode below to enter instantly!');
+        setError('Firebase Authorized Domain required. Please check your Firebase Console settings or use Guest Mode!');
       } else if (code === 'auth/popup-blocked') {
-        setError('Browser blocked sign-in popup. Please allow popups or use Guest Mode below.');
+        setError('Browser blocked sign-in popup. Redirecting or click Guest Mode below.');
       } else if (code === 'auth/operation-not-allowed') {
-        setError('Google Sign-In is not enabled in Firebase Console. Click Guest Mode below to enter!');
+        setError('Google Sign-In is not enabled in Firebase Console (Authentication -> Sign-in method -> Google).');
       } else {
-        setError(`Google Auth notice: ${code ? `(${code}) ` : ''}${msg}. Click Guest Mode below to enter instantly!`);
+        setError(`Google Auth notice: ${code ? `(${code}) ` : ''}${msg}. Click Guest Mode below to enter!`);
       }
     }
   };
