@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import BottomNav from './components/BottomNav';
 import Dashboard from './tabs/Dashboard';
 import Roadmap from './tabs/Roadmap';
@@ -32,6 +32,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const activeTabRef = useRef(activeTab);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const authLoading = useStore((s) => s.authLoading);
@@ -45,6 +50,8 @@ export default function App() {
 
     // Listen for Capacitor deep links & OAuth redirect returns
     let urlListener = null;
+    let backListener = null;
+
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       CapApp.addListener('appUrlOpen', async (data) => {
         console.log('[FLUX DeepLink] App URL Opened:', data.url);
@@ -52,6 +59,22 @@ export default function App() {
           await Browser.close();
         } catch (e) {}
       }).then((l) => { urlListener = l; });
+
+      // Hardware Back Button Navigation Handler
+      let lastBackPress = 0;
+      CapApp.addListener('backButton', () => {
+        const now = Date.now();
+        if (activeTabRef.current && activeTabRef.current !== 'dashboard') {
+          setActiveTab('dashboard');
+        } else {
+          if (now - lastBackPress < 2000) {
+            CapApp.minimizeApp();
+          } else {
+            lastBackPress = now;
+            showToast('Press back again to exit FLUX ⚡', '📱');
+          }
+        }
+      }).then((l) => { backListener = l; });
     }
 
     const done = localStorage.getItem('flux-onboarding-done');
@@ -62,6 +85,7 @@ export default function App() {
     return () => {
       cleanup && cleanup();
       urlListener && urlListener.remove();
+      backListener && backListener.remove();
     };
   }, [initAuthListener]);
 

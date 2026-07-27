@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
 import { showToast } from './Toast';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Clock } from 'lucide-react';
 import { 
   signInWithPopup, 
   signInWithCredential, 
@@ -12,23 +12,64 @@ import { auth } from '../firebase';
 export default function AuthModal({ onComplete }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [timeLeft, setTimeLeft] = useState(25);
   const googleBtnRef = useRef(null);
+  const timerRef = useRef(null);
+  const countdownRef = useRef(null);
 
   const updateProfile = useStore((s) => s.updateProfile);
 
-  // Initialize Google Identity Services (GSI In-App Token Authentication)
+  // Clear timers on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
+
+  // Timebound safety timer (25s max per auth cycle)
+  const startAuthCycleTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+
+    setTimeLeft(25);
+    countdownRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    timerRef.current = setTimeout(() => {
+      setLoading(false);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setError('Authentication cycle timed out (25s limit). Automatically returned to login screen.');
+      showToast('Login attempt timed out. Returned to login screen ⏱️', '⚠️');
+    }, 25000);
+  };
+
+  const stopAuthCycleTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  };
+
+  // Initialize Google Identity Services (GSI In-App Native Auth)
   useEffect(() => {
     if (window.google?.accounts?.id && googleBtnRef.current) {
       try {
         window.google.accounts.id.initialize({
-          // Firebase OAuth Web Client ID
           client_id: '984328987655-1d849fa847cbe3228e76a2.apps.googleusercontent.com',
           callback: async (response) => {
             if (response && response.credential) {
               setLoading(true);
+              startAuthCycleTimer();
               try {
                 const credential = GoogleAuthProvider.credential(response.credential);
                 const res = await signInWithCredential(auth, credential);
+                stopAuthCycleTimer();
                 if (res && res.user) {
                   const displayName = res.user.displayName || 'Flux Scholar';
                   updateProfile({
@@ -42,6 +83,7 @@ export default function AuthModal({ onComplete }) {
                   onComplete && onComplete();
                 }
               } catch (credErr) {
+                stopAuthCycleTimer();
                 console.warn('[FLUX GSI] Credential login error:', credErr);
                 setError('Google Credential auth error. Please try again or tap Continue as Guest.');
               } finally {
@@ -66,16 +108,18 @@ export default function AuthModal({ onComplete }) {
     }
   }, []);
 
-  // Primary Popup Firebase Google Auth Handler (Zero Redirect State Loss)
+  // Primary Popup Firebase Google Auth Handler (Strictly inside FLUX app)
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
+    startAuthCycleTimer();
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
 
-      // signInWithPopup prevents storage-partitioning state loss (auth/missing-initial-state)
+      // signInWithPopup executes strictly inside FLUX application container
       const res = await signInWithPopup(auth, provider);
+      stopAuthCycleTimer();
 
       if (res && res.user) {
         const displayName = res.user.displayName || 'Flux Scholar';
@@ -91,13 +135,14 @@ export default function AuthModal({ onComplete }) {
         onComplete && onComplete();
       }
     } catch (err) {
+      stopAuthCycleTimer();
       console.warn('[FLUX Auth] Google Sign-In error:', err);
       setLoading(false);
       const code = err?.code || '';
       const msg = err?.message || 'Google Auth notice';
 
       if (code === 'auth/popup-closed-by-user') {
-        setError('Sign-in popup was closed. Please try again or tap Continue as Guest.');
+        setError('Sign-in popup was closed. Automatically returned to login screen.');
       } else if (code === 'auth/unauthorized-domain') {
         setError('Domain authorization required. Please add this domain to Firebase Console -> Authentication -> Authorized Domains.');
       } else if (code === 'auth/operation-not-allowed') {
@@ -179,7 +224,10 @@ export default function AuthModal({ onComplete }) {
           }}
         >
           {loading ? (
-            <span>Connecting to Google...</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={16} className="animate-spin" />
+              Authenticating ({timeLeft}s max)...
+            </span>
           ) : (
             <>
               <svg width="22" height="22" viewBox="0 0 24 24">
