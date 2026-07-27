@@ -2,24 +2,26 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 🔒 User Data Collection Security Rules
-    // Allow users to read and write their own document collections safely
+    // 🔒 Strict Authentication & User Isolation Rules
+    // Only authenticated Firebase Auth users can read/write their own document data
     match /users/{userId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
 
+      // Scoped access for sub-collections (challenges, focus, journal, profile, gamification)
       match /{document=**} {
-        allow read, write: if true;
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
 
-    // 🌐 Tribe Leaderboard Collection
+    // 🌐 Tribe Leaderboard (Read-only for authenticated users, owner-write only)
     match /leaderboard/{entry} {
-      allow read, write: if true;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
 
-    // 🛡️ Default Safe Access
+    // 🚫 Strict Security Default: Deny All Unauthenticated Access
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
