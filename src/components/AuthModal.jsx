@@ -41,12 +41,22 @@ export default function AuthModal({ onComplete }) {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       
+      const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+
+      if (isNative) {
+        // On Native Mobile Android WebViews, use signInWithRedirect directly
+        // Deep link handler in AndroidManifest.xml routes back into FLUX app cleanly
+        console.log('[FLUX Auth] Native mobile platform detected, initiating Firebase OAuth redirect...');
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
       let res = null;
       try {
         res = await signInWithPopup(auth, provider);
       } catch (popupErr) {
         if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user') {
-          console.log('[FLUX Auth] Popup blocked or closed, redirecting to Firebase Auth handler...');
+          console.log('[FLUX Auth] Popup blocked or closed, falling back to Firebase Auth redirect...');
           await signInWithRedirect(auth, provider);
           return;
         }
@@ -144,7 +154,7 @@ export default function AuthModal({ onComplete }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
             boxShadow: '0 12px 30px -5px rgba(255, 255, 255, 0.3)',
             transition: 'all 0.2s ease', fontFamily: 'Outfit, sans-serif',
-            opacity: loading ? 0.7 : 1,
+            opacity: loading ? 0.7 : 1, marginBottom: '14px',
           }}
         >
           {loading ? (
@@ -160,6 +170,33 @@ export default function AuthModal({ onComplete }) {
               <span>Continue with Google</span>
             </>
           )}
+        </button>
+
+        {/* Secondary Guest Access Button */}
+        <button
+          onClick={() => {
+            const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+            updateProfile({
+              userName: 'Guest Scholar',
+              isAuthenticated: true,
+              userId: guestId,
+              userEmail: 'guest@flux.app',
+              userAvatar: '⚡',
+            });
+            showToast('Welcome to FLUX! ⚡ (Guest Mode Active)', '✨');
+            onComplete && onComplete();
+          }}
+          disabled={loading}
+          style={{
+            width: '100%', padding: '14px', borderRadius: '20px',
+            background: 'rgba(255, 255, 255, 0.08)', color: '#cbd5e1',
+            border: '1px solid rgba(255, 255, 255, 0.14)',
+            fontWeight: 700, fontSize: '14px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            transition: 'all 0.2s ease', fontFamily: 'Outfit, sans-serif',
+          }}
+        >
+          <span>Continue as Guest ⚡</span>
         </button>
 
         {/* Security Badge */}

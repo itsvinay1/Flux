@@ -25,6 +25,9 @@ const TAB_COMPONENTS = {
   profile: Profile,
 };
 
+import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -39,11 +42,27 @@ export default function App() {
     initAuthListener();
     const cleanup = initNetworkListeners();
     scheduleStreakReminder();
+
+    // Listen for Capacitor deep links & OAuth redirect returns
+    let urlListener = null;
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      CapApp.addListener('appUrlOpen', async (data) => {
+        console.log('[FLUX DeepLink] App URL Opened:', data.url);
+        try {
+          await Browser.close();
+        } catch (e) {}
+      }).then((l) => { urlListener = l; });
+    }
+
     const done = localStorage.getItem('flux-onboarding-done');
     if (!done) {
       setShowOnboarding(true);
     }
-    return cleanup;
+
+    return () => {
+      cleanup && cleanup();
+      urlListener && urlListener.remove();
+    };
   }, [initAuthListener]);
 
   const ActiveComponent = TAB_COMPONENTS[activeTab];

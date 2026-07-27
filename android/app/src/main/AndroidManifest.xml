@@ -23,6 +23,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep Link Handler for OAuth Callbacks & Firebase Auth Redirects -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="io.flux.app" />
+                <data android:scheme="https" android:host="flux-9.firebaseapp.com" />
+                <data android:scheme="https" android:host="flux-9.web.app" />
+            </intent-filter>
+
         </activity>
 
         <receiver
