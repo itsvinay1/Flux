@@ -3,6 +3,7 @@ import { Flame, Crown, Users, Plus, Trash2, Copy, Sparkles, Check, ChevronRight 
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
 import { getRoadmapTemplate } from '../mockAI';
+import RenderAvatar from '../components/Avatar';
 
 // Community Curated Explore Roadmaps that users can copy
 const EXPLORE_COMMUNITY_GOALS = [
@@ -86,8 +87,9 @@ function LeaderboardRow({ user, rank }) {
         fontSize: '20px', flexShrink: 0,
         border: '2px solid var(--bg-card)',
         boxShadow: isMe ? '0 0 0 2px #0ea5e9' : '0 2px 6px rgba(0,0,0,0.06)',
+        overflow: 'hidden',
       }}>
-        {user.avatar}
+        <RenderAvatar avatar={user.avatar} name={user.name} size={44} />
       </div>
 
       {/* Info */}

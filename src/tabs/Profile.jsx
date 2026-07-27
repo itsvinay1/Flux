@@ -9,6 +9,7 @@ import useStore, { ACHIEVEMENTS, getLevelName } from '../store/useStore';
 import { useNetworkStore, useSyncQueue } from '../sync/syncManager';
 import { getAICacheStats, clearAICache, getRemainingCalls } from '../ai/aiCache';
 import { showToast } from '../components/Toast';
+import RenderAvatar from '../components/Avatar';
 
 const AVATAR_OPTIONS = ['⚡', '🚀', '🔥', '🧠', '💎', '🦁', '🌊', '⭐', '🎯', '💪', '🦅', '🌿'];
 
@@ -460,8 +461,9 @@ export default function Profile() {
             fontSize: '36px', flexShrink: 0,
             border: '3px solid #fff',
             boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+            overflow: 'hidden',
           }}>
-            {userAvatar}
+            <RenderAvatar avatar={userAvatar} name={userName} size={72} fontSize="36px" />
           </div>
 
           {/* Info */}

@@ -16,6 +16,7 @@ import { showToast } from '../components/Toast';
 import ConsistencyHeatmap from '../components/ConsistencyHeatmap';
 import ShareCardModal from '../components/ShareCardModal';
 import CreateChallengeModal from '../components/CreateChallengeModal';
+import RenderAvatar from '../components/Avatar';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -53,8 +54,9 @@ function UserHeader({ onNavigate, onShare }) {
           boxShadow: '0 6px 20px rgba(14,165,233,0.35)',
           border: '3px solid var(--bg-card)',
           flexShrink: 0,
+          overflow: 'hidden',
         }}>
-          {userAvatar || '⚡'}
+          <RenderAvatar avatar={userAvatar} name={userName} size={52} />
         </div>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.4px' }}>
