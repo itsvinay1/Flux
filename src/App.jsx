@@ -31,7 +31,7 @@ import { Browser } from '@capacitor/browser';
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const activeTabRef = useRef(activeTab);
 
   useEffect(() => {

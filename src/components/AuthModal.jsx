@@ -102,17 +102,16 @@ export default function AuthModal({ onComplete }) {
           shape: 'pill',
           text: 'continue_with',
         });
+
+        // Trigger native Google One-Tap account selector dialog on mount
+        window.google.accounts.id.prompt();
       } catch (gsiErr) {
         console.warn('[FLUX GSI] Setup notice:', gsiErr);
       }
     }
   }, []);
 
-  // Primary Popup Firebase Google Auth Handler (Strictly inside FLUX app)
-  const handleGoogleSignIn = async () => {
-    setError('');
-    setLoading(true);
-    startAuthCycleTimer();
+  const doPopupSignIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
@@ -150,6 +149,28 @@ export default function AuthModal({ onComplete }) {
       } else {
         setError(`Google Auth notice (${code}): ${msg}`);
       }
+    }
+  };
+
+  // Primary Popup / GSI Prompt Firebase Google Auth Handler
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    startAuthCycleTimer();
+
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.log('[FLUX GSI] Prompt skipped or not displayed, falling back to popup...');
+            doPopupSignIn();
+          }
+        });
+      } catch (e) {
+        doPopupSignIn();
+      }
+    } else {
+      doPopupSignIn();
     }
   };
 
