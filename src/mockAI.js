@@ -129,6 +129,8 @@ export function getRoadmapTemplate(type) {
   }));
 }
 
+import { getOfflineAIResponse } from './ai/knowledgeEngine';
+
 export async function callGemini(prompt) {
   if (genAI) {
     try {
@@ -145,7 +147,7 @@ export async function callGemini(prompt) {
     }
   }
 
-  // Trained Offline Intelligence Fallback
-  await new Promise((res) => setTimeout(res, 400));
-  return "Stay focused on your primary objective. Every minute logged compounds your self-discipline.";
+  // Trained Offline Knowledge Memory Engine Fallback
+  await new Promise((res) => setTimeout(res, 300));
+  return getOfflineAIResponse(prompt);
 }

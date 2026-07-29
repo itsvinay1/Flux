@@ -211,11 +211,15 @@ export default function FocusTimer() {
   };
 
   const handleComplete = useCallback(() => {
-    setIsRunning(false);
-    setSessionComplete(true);
-    const minsCompleted = Math.max(1, Math.round(totalSeconds / 60));
-    addFocusSession(minsCompleted, currentDistractions);
-    showToast(`Session complete! +${minsCompleted} pts earned 🎉`, '🏆');
+    try {
+      setIsRunning(false);
+      setSessionComplete(true);
+      const minsCompleted = Math.max(1, Math.round(totalSeconds / 60));
+      addFocusSession(minsCompleted, currentDistractions);
+      showToast(`Session complete! +${minsCompleted} pts earned 🎉`, '🏆');
+    } catch (err) {
+      console.warn('[FocusTimer] Completion notice:', err);
+    }
   }, [totalSeconds, currentDistractions, addFocusSession]);
 
   const handleStart = () => {
@@ -224,11 +228,16 @@ export default function FocusTimer() {
   };
 
   const handleReset = () => {
-    setIsRunning(false);
-    setSecondsLeft(totalSeconds);
-    setSessionComplete(false);
-    resetDistraction();
-    clearInterval(intervalRef.current);
+    try {
+      setIsRunning(false);
+      setSecondsLeft(totalSeconds);
+      setSessionComplete(false);
+      resetDistraction();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      audioEngine.stopAll();
+    } catch (err) {
+      console.warn('[FocusTimer] Reset notice:', err);
+    }
   };
 
   const handleDistraction = () => {
@@ -239,31 +248,36 @@ export default function FocusTimer() {
   useEffect(() => {
     if (isRunning) {
       // Automatically resume selected ambient sound when timer is running
-      if (activeSound === 'flute') audioEngine.playFlute();
-      if (activeSound === 'lofi') audioEngine.playLofi();
-      if (activeSound === 'meditation') audioEngine.playMeditation();
-      if (activeSound === 'rain') audioEngine.playRain();
+      try {
+        if (activeSound === 'flute') audioEngine.playFlute();
+        if (activeSound === 'lofi') audioEngine.playLofi();
+        if (activeSound === 'meditation') audioEngine.playMeditation();
+        if (activeSound === 'rain') audioEngine.playRain();
+      } catch (e) {}
 
       intervalRef.current = setInterval(() => {
         setSecondsLeft((prev) => {
           if (prev <= 1) { 
-            clearInterval(intervalRef.current); 
-            audioEngine.stopAll(); 
-            handleComplete(); 
+            if (intervalRef.current) clearInterval(intervalRef.current); 
+            setTimeout(() => {
+              try {
+                audioEngine.stopAll(); 
+                handleComplete(); 
+              } catch (e) {}
+            }, 0);
             return 0; 
           }
           return prev - 1;
         });
       }, 1000);
     } else {
-      // Tightly tie audio to timer state: Stop audio immediately when timer pauses/stops
-      clearInterval(intervalRef.current);
-      audioEngine.stopAll();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      try { audioEngine.stopAll(); } catch (e) {}
     }
 
     return () => {
-      clearInterval(intervalRef.current);
-      audioEngine.stopAll();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      try { audioEngine.stopAll(); } catch (e) {}
     };
   }, [isRunning, activeSound, handleComplete]);
 

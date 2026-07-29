@@ -1,9 +1,10 @@
 import React from 'react';
-import { Home, Map, Timer, BookOpen, Users, User, Bot } from 'lucide-react';
+import { Home, Map, Timer, BookOpen, Users, User, Bot, CheckSquare } from 'lucide-react';
 
 const TABS = [
   { id: 'dashboard', label: 'Home',    Icon: Home },
   { id: 'roadmap',   label: 'Journey', Icon: Map },
+  { id: 'syllabus',  label: 'Syllabus',Icon: CheckSquare },
   { id: 'focus',     label: 'Focus',   Icon: Timer },
   { id: 'coach',     label: 'Coach',   Icon: Bot },
   { id: 'journal',   label: 'Journal', Icon: BookOpen },

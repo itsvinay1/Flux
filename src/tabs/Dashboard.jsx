@@ -260,7 +260,13 @@ function ChallengeCard({ onNavigate, onCreateGoal }) {
     totalDays: 60,
   };
 
-  const progress = Math.round(((challenge.completedDays || 1) / (challenge.totalDays || 60)) * 100);
+  const milestones = challenge.milestones || [];
+  const completedMilestones = milestones.filter((m) => m.completed).length;
+  const totalMilestones = milestones.length;
+
+  const progress = totalMilestones > 0 
+    ? Math.round((completedMilestones / totalMilestones) * 100)
+    : Math.round(((challenge.completedDays || 1) / (challenge.totalDays || 60)) * 100);
 
   return (
     <div className="card card-dark mb-16" style={{ padding: '28px' }}>
@@ -348,8 +354,8 @@ function ChallengeCard({ onNavigate, onCreateGoal }) {
 
         {/* Progress */}
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>
-          <span>Progress</span>
-          <span style={{ color: '#fff', fontWeight: 700 }}>{progress}%</span>
+          <span>{totalMilestones > 0 ? `Milestones: ${completedMilestones}/${totalMilestones} Completed` : `Day ${challenge.completedDays || 1} of ${challenge.totalDays || 60}`}</span>
+          <span style={{ color: '#fff', fontWeight: 800 }}>{progress}%</span>
         </div>
         <div className="progress-bar-track" style={{ marginBottom: '20px' }}>
           <div className="progress-bar-fill" style={{ width: `${progress}%` }} />

@@ -7,6 +7,7 @@ import Journal from './tabs/Journal';
 import Tribe from './tabs/Tribe';
 import Profile from './tabs/Profile';
 import AICoachChat from './tabs/AICoachChat';
+import SyllabusTracker from './tabs/SyllabusTracker';
 import OnboardingModal from './components/OnboardingModal';
 import AuthModal from './components/AuthModal';
 import SplashScreen from './components/SplashScreen';
@@ -18,6 +19,7 @@ import useStore from './store/useStore';
 const TAB_COMPONENTS = {
   dashboard: Dashboard,
   roadmap: Roadmap,
+  syllabus: SyllabusTracker,
   focus: FocusTimer,
   coach: AICoachChat,
   journal: Journal,
