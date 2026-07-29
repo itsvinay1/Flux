@@ -183,9 +183,16 @@ export default function AuthModal({ onComplete }) {
       return;
     }
 
-    if (emailMode === 'signup' && !fullName.trim()) {
-      setError('Please enter your full name.');
-      return;
+    if (emailMode === 'signup') {
+      if (!fullName.trim()) {
+        setError('Please enter your full name.');
+        return;
+      }
+      const cleanEmail = email.trim().toLowerCase();
+      if (!cleanEmail.endsWith('@gmail.com')) {
+        setError('Only official @gmail.com email addresses are allowed for registration to prevent ghost & temporary mail users 🛡️');
+        return;
+      }
     }
 
     setError('');
@@ -452,7 +459,7 @@ export default function AuthModal({ onComplete }) {
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                 <input
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder={emailMode === 'signup' ? "yourname@gmail.com" : "name@example.com"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -463,6 +470,11 @@ export default function AuthModal({ onComplete }) {
                   }}
                 />
               </div>
+              {emailMode === 'signup' && (
+                <p style={{ fontSize: '11px', color: '#38bdf8', marginTop: '6px', fontWeight: 600, lineHeight: 1.4 }}>
+                  🛡️ <b>Note:</b> Only official <b>@gmail.com</b> email addresses are allowed for registration to prevent anonymous temporary accounts.
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: '18px' }}>
