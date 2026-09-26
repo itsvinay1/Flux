@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, RotateCcw, Plus, CheckCircle, Lock, Settings2, Volume2, CloudRain, Zap, Radio } from 'lucide-react';
+import { Play, Pause, RotateCcw, Plus, CheckCircle, Lock, Settings2, Volume2, CloudRain, Zap, Radio, Music, Upload } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
 import { audioEngine } from '../utils/ambientAudio';
@@ -167,6 +167,22 @@ export default function FocusTimer() {
   const [customMins, setCustomMins] = useState(45);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeSound, setActiveSound] = useState('off');
+  const [customTrack, setCustomTrack] = useState(null); // { url, name }
+  const customAudioRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleCustomAudioUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = URL.createObjectURL(file);
+      setCustomTrack({ url, name: file.name });
+      setActiveSound('custom');
+      showToast(`Loaded "${file.name}" 🎵`, '🎧');
+    } catch (err) {
+      showToast('Could not load audio file', '❌');
+    }
+  };
 
   const [secondsLeft, setSecondsLeft] = useState(MODES[0].minutes * 60);
   const [totalSeconds, setTotalSeconds] = useState(MODES[0].minutes * 60);
@@ -214,6 +230,7 @@ export default function FocusTimer() {
     try {
       setIsRunning(false);
       setSessionComplete(true);
+      if (customAudioRef.current) customAudioRef.current.pause();
       const minsCompleted = Math.max(1, Math.round(totalSeconds / 60));
       addFocusSession(minsCompleted, currentDistractions);
       showToast(`Session complete! +${minsCompleted} pts earned 🎉`, '🏆');
@@ -235,6 +252,10 @@ export default function FocusTimer() {
       resetDistraction();
       if (intervalRef.current) clearInterval(intervalRef.current);
       audioEngine.stopAll();
+      if (customAudioRef.current) {
+        customAudioRef.current.pause();
+        customAudioRef.current.currentTime = 0;
+      }
     } catch (err) {
       console.warn('[FocusTimer] Reset notice:', err);
     }
@@ -250,6 +271,9 @@ export default function FocusTimer() {
   useEffect(() => {
     try {
       audioEngine.setMasterVolume(volume);
+      if (customAudioRef.current) {
+        customAudioRef.current.volume = volume;
+      }
     } catch (e) {}
   }, [volume]);
 
@@ -261,6 +285,10 @@ export default function FocusTimer() {
         if (activeSound === 'flute') audioEngine.playFlute();
         if (activeSound === 'lofi') audioEngine.playLofi();
         if (activeSound === 'rain') audioEngine.playRain();
+        if (activeSound === 'custom' && customAudioRef.current) {
+          customAudioRef.current.currentTime = 0;
+          customAudioRef.current.play().catch(() => {});
+        }
       } catch (e) {}
 
       intervalRef.current = setInterval(() => {
@@ -270,6 +298,7 @@ export default function FocusTimer() {
             setTimeout(() => {
               try {
                 audioEngine.stopAll(); 
+                if (customAudioRef.current) customAudioRef.current.pause();
                 handleComplete(); 
               } catch (e) {}
             }, 0);
@@ -281,19 +310,35 @@ export default function FocusTimer() {
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
       try { audioEngine.stopAll(); } catch (e) {}
+      if (customAudioRef.current) customAudioRef.current.pause();
     }
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       try { audioEngine.stopAll(); } catch (e) {}
+      if (customAudioRef.current) customAudioRef.current.pause();
     };
   }, [isRunning, activeSound, handleComplete]);
 
   return (
-    <div className="tab-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ width: '100%', textAlign: 'center', marginBottom: '24px', paddingTop: '12px' }}>
-        <h1 className="page-title">Focus & Flow</h1>
-        <p className="page-subtitle">Comfy distraction-free focus environment</p>
+    <div className="tab-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '120px' }}>
+      {/* Hidden Audio and File Input Elements for Custom Audio */}
+      {customTrack?.url && (
+        <audio ref={customAudioRef} src={customTrack.url} loop preload="auto" />
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="audio/*"
+        style={{ display: 'none' }}
+        onChange={handleCustomAudioUpload}
+      />
+
+      <div className="sticky-screen-header" style={{ width: '100%' }}>
+        <div>
+          <h1 className="page-title" style={{ fontSize: '19px', fontWeight: 800 }}>Focus &amp; Flow</h1>
+          <p className="page-subtitle" style={{ fontSize: '11px', margin: 0 }}>Distraction-free focus timer</p>
+        </div>
       </div>
 
       {/* Mode Selector + Custom Button */}
@@ -516,7 +561,7 @@ export default function FocusTimer() {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
           {[
             { id: 'off', label: 'Off', icon: <Volume2 size={13} /> },
             { id: 'meditation', label: '🧘 Om', icon: <Zap size={13} /> },
@@ -524,23 +569,35 @@ export default function FocusTimer() {
             { id: 'flute', label: '🪈 Flute', icon: <Radio size={13} /> },
             { id: 'lofi', label: '☕ Lo-Fi', icon: <Zap size={13} /> },
             { id: 'rain', label: '🌧️ Rain', icon: <CloudRain size={13} /> },
+            { id: 'custom', label: '📁 My Audio', icon: <Music size={13} /> },
           ].map((snd) => {
             const isActive = activeSound === snd.id;
             return (
               <button
                 key={snd.id}
                 onClick={() => {
+                  if (snd.id === 'custom') {
+                    if (!customTrack) {
+                      fileInputRef.current?.click();
+                      return;
+                    }
+                  }
                   setActiveSound(snd.id);
                   if (isRunning) {
                     audioEngine.stopAll();
+                    if (customAudioRef.current) customAudioRef.current.pause();
                     if (snd.id === 'meditation') audioEngine.playTanpuraMeditation();
                     if (snd.id === 'study') audioEngine.playStudyBrownNoise();
                     if (snd.id === 'flute') audioEngine.playFlute();
                     if (snd.id === 'lofi') audioEngine.playLofi();
                     if (snd.id === 'rain') audioEngine.playRain();
+                    if (snd.id === 'custom' && customAudioRef.current) {
+                      customAudioRef.current.currentTime = 0;
+                      customAudioRef.current.play().catch(() => {});
+                    }
                   }
                   if (snd.id !== 'off') {
-                    showToast(isRunning ? `Playing ${snd.label} 🎧` : `Selected ${snd.label} (plays on start) 🎧`, '🎵');
+                    showToast(isRunning ? `Playing ${snd.label} 🎧` : `Selected ${snd.label} 🎧`, '🎵');
                   }
                 }}
                 style={{
@@ -562,6 +619,32 @@ export default function FocusTimer() {
             );
           })}
         </div>
+
+        {/* Custom Audio Upload / Selected Banner */}
+        {activeSound === 'custom' && (
+          <div style={{
+            marginTop: '12px', padding: '10px 14px', borderRadius: '14px',
+            background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <Music size={15} color="var(--accent-sky)" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {customTrack ? customTrack.name : 'No file selected yet'}
+              </span>
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                fontSize: '11px', fontWeight: 800, color: 'var(--accent-sky)',
+                background: 'rgba(14,165,233,0.1)', padding: '5px 10px', borderRadius: '8px',
+                border: 'none', cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              {customTrack ? 'Change 📁' : 'Choose File 📁'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Session Complete Card */}

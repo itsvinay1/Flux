@@ -10,6 +10,8 @@ import { useNetworkStore, useSyncQueue } from '../sync/syncManager';
 import { getAICacheStats, clearAICache, getRemainingCalls } from '../ai/aiCache';
 import { showToast } from '../components/Toast';
 import RenderAvatar from '../components/Avatar';
+import PrivacyPolicyModal from '../components/PrivacyPolicy';
+import TermsOfServiceModal from '../components/TermsOfService';
 
 const AVATAR_OPTIONS = ['⚡', '🚀', '🔥', '🧠', '💎', '🦁', '🌊', '⭐', '🎯', '💪', '🦅', '🌿'];
 
@@ -420,6 +422,8 @@ export default function Profile() {
 
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTos, setShowTos] = useState(false);
 
   const level = getLevel();
   const levelName = getLevelName();
@@ -440,6 +444,8 @@ export default function Profile() {
           onConfirm={() => { clearAllData(); }}
         />
       )}
+      {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
+      {showTos && <TermsOfServiceModal onClose={() => setShowTos(false)} />}
 
       {/* ── Header ── */}
       <div style={{ paddingTop: '12px', marginBottom: '24px' }}>
@@ -527,10 +533,6 @@ export default function Profile() {
       {/* ── Streak Freeze & Vacation Mode ── */}
       <StreakFreezeCard />
 
-      {/* ── Achievements ── */}
-      <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
-        <AchievementGrid />
-      </div>
 
       {/* ── AI Usage ── */}
       <AIUsagePanel />
@@ -566,8 +568,8 @@ export default function Profile() {
         <SettingsGroup
           title="Legal & Privacy"
           items={[
-            { icon: <Shield size={18} />,   label: 'Privacy Policy',   onClick: () => {} },
-            { icon: <FileText size={18} />, label: 'Terms of Service', onClick: () => {} },
+            { icon: <Shield size={18} />,   label: 'Privacy Policy',   onClick: () => setShowPrivacy(true) },
+            { icon: <FileText size={18} />, label: 'Terms of Service', onClick: () => setShowTos(true) },
           ]}
         />
 

@@ -307,22 +307,22 @@ export default function Roadmap() {
           <div style={{ display: 'flex', gap: '10px' }}>
             <input
               id="input-goal"
-              placeholder="e.g. GATE 2026, NEET, Board Exams..."
+              placeholder="e.g. GATE 2026, Learn React, UPSC..."
               value={goalInput}
               onChange={(e) => setGoalInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleGenerateAI()}
               style={{
                 flex: 1,
-                background: '#ffffff',
-                color: '#0f172a',
-                border: '2px solid #e2e8f0',
+                background: 'var(--bg-card)',
+                color: 'var(--text-primary)',
+                border: '1.5px solid var(--glass-border)',
                 borderRadius: '16px',
                 padding: '14px 16px',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: 600,
                 outline: 'none',
                 fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
               }}
             />
             <button
@@ -350,33 +350,6 @@ export default function Roadmap() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Pre-trained Exam & Productivity Chips */}
-      <div className="section-label">Trained Exam & Target Roadmaps</div>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
-        {PRESET_GOALS.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => handlePresetSelect(p.id)}
-            style={{
-              flexShrink: 0,
-              padding: '10px 18px',
-              fontSize: '13px',
-              fontWeight: 700,
-              background: activePreset === p.id ? `${p.color}15` : 'var(--bg-card)',
-              border: `1.5px solid ${activePreset === p.id ? p.color : 'var(--glass-border)'}`,
-              borderRadius: '99px',
-              color: activePreset === p.id ? p.color : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'Outfit, sans-serif',
-              boxShadow: 'var(--shadow-card)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {p.emoji} {p.label}
-          </button>
-        ))}
       </div>
 
       {/* Sequence Milestones Header */}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   BookOpen, CheckSquare, Square, Plus, Trash2, Edit3, ChevronDown, 
-  ChevronRight, Award, Sparkles, Filter, AlertTriangle, Layers, Folder, FileText
+  ChevronRight, MoreVertical, X, Folder, AlertTriangle, Check
 } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
@@ -34,7 +34,6 @@ export default function SyllabusTracker() {
 
   const [expandedChapters, setExpandedChapters] = useState({});
   const [expandedTopics, setExpandedTopics] = useState({});
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [modalType, setModalType] = useState(null); // 'addCourse' | 'addSubject' | 'addChapter' | 'addTopic' | 'addSubTopic' | 'deleteConfirm' | 'editItem'
@@ -42,11 +41,14 @@ export default function SyllabusTracker() {
   const [inputTitle, setInputTitle] = useState('');
   const [inputIcon, setInputIcon] = useState('');
 
+  // Modern Action Sheet state
+  const [actionSheet, setActionSheet] = useState(null); // { title, subtitle, actions: [{ label, icon, onClick, danger }] }
+
   const currentCourse = courses.find((c) => c.id === activeCourseId) || courses[0];
   const activeSubjects = currentCourse?.subjects || [];
   const currentSubject = activeSubjects.find((s) => s.id === activeSubjectId) || activeSubjects[0];
 
-  // Helper calculations for 4-level progress
+  // Helper calculations for progress
   const getSubjectMetrics = (subject) => {
     let total = 0;
     let completed = 0;
@@ -75,7 +77,7 @@ export default function SyllabusTracker() {
 
     if (modalType === 'addCourse') {
       addCourse(inputTitle.trim(), 'General', inputIcon || '📚');
-      showToast('New Course created! 🚀', '✨');
+      showToast('Course created! 🚀', '✨');
     } else if (modalType === 'addSubject') {
       addSubject(currentCourse.id, inputTitle.trim(), inputIcon || '📘');
       showToast('Subject added! 📚', '✨');
@@ -95,7 +97,7 @@ export default function SyllabusTracker() {
       else if (level === 'chapter') editChapter(courseId, subjectId, chapterId, { title: inputTitle.trim() });
       else if (level === 'topic') editTopic(courseId, subjectId, chapterId, topicId, { title: inputTitle.trim() });
       else if (level === 'subTopic') editSubTopic(courseId, subjectId, chapterId, topicId, subTopicId, { title: inputTitle.trim() });
-      showToast('Item updated successfully ✨', '✏️');
+      showToast('Updated successfully ✨', '✏️');
     }
 
     setModalType(null);
@@ -115,39 +117,152 @@ export default function SyllabusTracker() {
     setModalType(null);
   };
 
+  // Quick Action Sheet Trigger Helpers
+  const openSubjectMenu = (sub) => {
+    setActionSheet({
+      title: `${sub.icon || '📘'} ${sub.title}`,
+      subtitle: 'Subject Options',
+      actions: [
+        {
+          label: 'Add Chapter',
+          icon: '➕',
+          onClick: () => {
+            setModalType('addChapter');
+            setModalData({ subjectId: sub.id });
+            setInputTitle('');
+          }
+        },
+        {
+          label: 'Edit Subject Name & Icon',
+          icon: '✏️',
+          onClick: () => {
+            setModalType('editItem');
+            setModalData({ level: 'subject', courseId: currentCourse.id, subjectId: sub.id });
+            setInputTitle(sub.title);
+            setInputIcon(sub.icon || '📘');
+          }
+        },
+        {
+          label: 'Delete Subject',
+          icon: '🗑️',
+          danger: true,
+          onClick: () => {
+            setModalType('deleteConfirm');
+            setModalData({ level: 'subject', courseId: currentCourse.id, subjectId: sub.id, title: sub.title });
+          }
+        }
+      ]
+    });
+  };
+
+  const openChapterMenu = (chap) => {
+    setActionSheet({
+      title: `📖 ${chap.title}`,
+      subtitle: 'Chapter Options',
+      actions: [
+        {
+          label: 'Add New Topic',
+          icon: '➕',
+          onClick: () => {
+            setModalType('addTopic');
+            setModalData({ subjectId: currentSubject.id, chapterId: chap.id });
+            setInputTitle('');
+          }
+        },
+        {
+          label: 'Edit Chapter Title',
+          icon: '✏️',
+          onClick: () => {
+            setModalType('editItem');
+            setModalData({ level: 'chapter', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id });
+            setInputTitle(chap.title);
+          }
+        },
+        {
+          label: 'Delete Chapter',
+          icon: '🗑️',
+          danger: true,
+          onClick: () => {
+            setModalType('deleteConfirm');
+            setModalData({ level: 'chapter', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id, title: chap.title });
+          }
+        }
+      ]
+    });
+  };
+
+  const openTopicMenu = (top, chapId) => {
+    setActionSheet({
+      title: `📝 ${top.title}`,
+      subtitle: 'Topic Options',
+      actions: [
+        {
+          label: 'Add Sub-topic Checklist Item',
+          icon: '➕',
+          onClick: () => {
+            setModalType('addSubTopic');
+            setModalData({ subjectId: currentSubject.id, chapterId: chapId, topicId: top.id });
+            setInputTitle('');
+          }
+        },
+        {
+          label: 'Edit Topic Title',
+          icon: '✏️',
+          onClick: () => {
+            setModalType('editItem');
+            setModalData({ level: 'topic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chapId, topicId: top.id });
+            setInputTitle(top.title);
+          }
+        },
+        {
+          label: 'Delete Topic',
+          icon: '🗑️',
+          danger: true,
+          onClick: () => {
+            setModalType('deleteConfirm');
+            setModalData({ level: 'topic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chapId, topicId: top.id, title: top.title });
+          }
+        }
+      ]
+    });
+  };
+
+  const openSubTopicMenu = (st, chapId, topId) => {
+    setActionSheet({
+      title: st.title,
+      subtitle: 'Sub-topic Options',
+      actions: [
+        {
+          label: 'Edit Title',
+          icon: '✏️',
+          onClick: () => {
+            setModalType('editItem');
+            setModalData({ level: 'subTopic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chapId, topicId: topId, subTopicId: st.id });
+            setInputTitle(st.title);
+          }
+        },
+        {
+          label: 'Delete Sub-topic',
+          icon: '🗑️',
+          danger: true,
+          onClick: () => {
+            setModalType('deleteConfirm');
+            setModalData({ level: 'subTopic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chapId, topicId: topId, subTopicId: st.id, title: st.title });
+          }
+        }
+      ]
+    });
+  };
+
   return (
     <div className="tab-page" style={{ paddingBottom: '120px' }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '20px', paddingTop: '8px' }}>
-        <span className="badge badge-primary" style={{ marginBottom: '6px', display: 'inline-flex' }}>
-          Hierarchy Mastery
-        </span>
-        <h1 className="page-title">Course &amp; Syllabus Manager</h1>
-        <p className="page-subtitle">Course → Subject → Chapter → Topic → Sub-topic</p>
-      </div>
-
-      {/* Course Switcher Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-        {courses.map((c) => {
-          const isSel = c.id === (currentCourse?.id);
-          return (
-            <button
-              key={c.id}
-              onClick={() => { setActiveCourseId(c.id); setActiveSubjectId(''); }}
-              style={{
-                padding: '8px 16px', borderRadius: '99px', fontSize: '12px', fontWeight: 800,
-                background: isSel ? 'var(--accent-sky)' : 'var(--bg-card)',
-                border: `1.5px solid ${isSel ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
-                color: isSel ? '#fff' : 'var(--text-secondary)',
-                cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s ease',
-                display: 'flex', alignItems: 'center', gap: '6px',
-              }}
-            >
-              <span>{c.icon || '📚'}</span> {c.title}
-            </button>
-          );
-        })}
-
+      
+      {/* ── Fixed Sticky Screen Header ── */}
+      <div className="sticky-screen-header">
+        <div>
+          <h1 className="page-title" style={{ fontSize: '19px', fontWeight: 800 }}>Syllabus Tracker</h1>
+          <p className="page-subtitle" style={{ fontSize: '11px', margin: 0 }}>Step-by-step syllabus mastery</p>
+        </div>
         <button
           onClick={() => {
             setModalType('addCourse');
@@ -155,44 +270,83 @@ export default function SyllabusTracker() {
             setInputIcon('🎓');
           }}
           style={{
-            padding: '8px 14px', borderRadius: '99px', fontSize: '12px', fontWeight: 800,
-            background: 'var(--bg-card)', border: '1px dashed var(--accent-sky)',
-            color: 'var(--accent-sky)', cursor: 'pointer', whiteSpace: 'nowrap',
-            display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0,
+            padding: '7px 13px', borderRadius: '12px', fontSize: '12px', fontWeight: 800,
+            background: 'var(--accent-sky)', color: '#fff', border: 'none',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+            boxShadow: 'var(--shadow-button-sky)', fontFamily: 'Outfit, sans-serif',
           }}
         >
-          <Plus size={14} /> New Course
+          <Plus size={14} /> Course
         </button>
       </div>
 
-      {/* Subject Switcher Row */}
+      {/* ── Course Switcher Bar ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', overflowX: 'auto', paddingBottom: '4px' }}>
+        {courses.map((c) => {
+          const isSel = c.id === (currentCourse?.id);
+          return (
+            <button
+              key={c.id}
+              onClick={() => { setActiveCourseId(c.id); setActiveSubjectId(''); }}
+              style={{
+                padding: '7px 14px', borderRadius: '99px', fontSize: '12px', fontWeight: 700,
+                background: isSel ? 'var(--accent-sky)' : 'var(--bg-card)',
+                border: `1.5px solid ${isSel ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
+                color: isSel ? '#fff' : 'var(--text-secondary)',
+                cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s ease',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                fontFamily: 'Outfit, sans-serif',
+              }}
+            >
+              <span>{c.icon || '📚'}</span> {c.title}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Subject Horizontal Cards ── */}
       {currentCourse && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
           {activeSubjects.map((sub) => {
             const isSel = sub.id === (currentSubject?.id || activeSubjects[0]?.id);
             const metrics = getSubjectMetrics(sub);
             return (
-              <button
+              <div
                 key={sub.id}
                 onClick={() => setActiveSubjectId(sub.id)}
                 style={{
-                  flex: 1, minWidth: '130px', padding: '12px 14px', borderRadius: '18px',
+                  minWidth: '135px', padding: '12px 14px', borderRadius: '16px',
                   background: isSel ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'var(--bg-card)',
                   color: isSel ? '#fff' : 'var(--text-secondary)',
                   border: `1.5px solid ${isSel ? '#0ea5e9' : 'var(--glass-border)'}`,
                   cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-                  boxShadow: isSel ? '0 10px 25px -5px rgba(14, 165, 233, 0.4)' : 'var(--shadow-card)',
-                  textAlign: 'left', transition: 'all 0.2s ease',
+                  boxShadow: isSel ? '0 8px 20px -4px rgba(14, 165, 233, 0.35)' : 'var(--shadow-card)',
+                  transition: 'all 0.2s ease', position: 'relative',
                 }}
               >
-                <div style={{ fontSize: '18px', marginBottom: '4px' }}>{sub.icon || '📘'}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '20px' }}>{sub.icon || '📘'}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openSubjectMenu(sub);
+                    }}
+                    style={{
+                      background: 'transparent', border: 'none',
+                      color: isSel ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)',
+                      cursor: 'pointer', padding: '2px', display: 'flex',
+                    }}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
                 <div style={{ fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {sub.title}
                 </div>
                 <div style={{ fontSize: '10px', opacity: 0.85, marginTop: '2px' }}>
-                  {metrics.completed}/{metrics.total} Sub-topics ({metrics.percent}%)
+                  {metrics.completed}/{metrics.total} ({metrics.percent}%)
                 </div>
-              </button>
+              </div>
             );
           })}
 
@@ -203,79 +357,68 @@ export default function SyllabusTracker() {
               setInputIcon('📘');
             }}
             style={{
-              padding: '12px 16px', borderRadius: '18px',
+              padding: '12px 16px', borderRadius: '16px', minWidth: '95px',
               background: 'var(--bg-card)', border: '1px dashed var(--glass-border)',
-              color: 'var(--accent-sky)', fontSize: '12px', fontWeight: 700,
+              color: 'var(--accent-sky)', fontSize: '11px', fontWeight: 700,
               cursor: 'pointer', display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              gap: '4px', fontFamily: 'Outfit, sans-serif',
             }}
           >
-            <Plus size={18} />
+            <Plus size={16} />
             <span>Add Subject</span>
           </button>
         </div>
       )}
 
-      {/* Active Subject Progress Banner & Actions */}
+      {/* ── Active Subject Progress Header ── */}
       {currentSubject && (
-        <div className="card card-dark mb-20" style={{ padding: '20px', background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>
-                  {currentSubject.icon || '📘'} {currentSubject.title}
+        <div className="card mb-16" style={{ padding: '16px 18px', background: 'var(--bg-card)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '20px' }}>{currentSubject.icon || '📘'}</span>
+              <div>
+                <h2 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  {currentSubject.title}
                 </h2>
-                <button
-                  onClick={() => {
-                    setModalType('editItem');
-                    setModalData({ level: 'subject', courseId: currentCourse.id, subjectId: currentSubject.id });
-                    setInputTitle(currentSubject.title);
-                    setInputIcon(currentSubject.icon || '📘');
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-                >
-                  <Edit3 size={15} />
-                </button>
-                <button
-                  onClick={() => {
-                    setModalType('deleteConfirm');
-                    setModalData({ level: 'subject', courseId: currentCourse.id, subjectId: currentSubject.id, title: currentSubject.title });
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                >
-                  <Trash2 size={15} />
-                </button>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '1px' }}>
+                  {currentSubjectMetrics.completed} of {currentSubjectMetrics.total} Sub-topics Completed
+                </p>
               </div>
-              <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                {currentSubjectMetrics.completed} of {currentSubjectMetrics.total} Sub-topics Completed
-              </p>
             </div>
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%',
-              background: 'rgba(14, 165, 233, 0.15)',
-              border: '3px solid #0ea5e9',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '14px', fontWeight: 900, color: '#38bdf8',
-            }}>
-              {currentSubjectMetrics.percent}%
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 900, color: 'var(--accent-sky)' }}>
+                {currentSubjectMetrics.percent}%
+              </span>
+              <button
+                onClick={() => openSubjectMenu(currentSubject)}
+                style={{
+                  background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+                  color: 'var(--text-secondary)', borderRadius: '10px', padding: '6px',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                }}
+              >
+                <MoreVertical size={16} />
+              </button>
             </div>
           </div>
 
-          <div style={{ height: '6px', width: '100%', background: 'rgba(255, 255, 255, 0.12)', borderRadius: '99px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', width: '100%', background: 'var(--bg-secondary)', borderRadius: '99px', overflow: 'hidden' }}>
             <div style={{
               height: '100%', width: `${currentSubjectMetrics.percent}%`,
-              background: 'linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%)',
+              background: 'linear-gradient(90deg, #0ea5e9 0%, #6366f1 100%)',
               borderRadius: '99px', transition: 'width 0.4s ease',
             }} />
           </div>
         </div>
       )}
 
-      {/* Chapters, Topics & Sub-topics Hierarchy */}
+      {/* ── Chapters & Content Tree ── */}
       {currentSubject && (
         <div style={{ width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div className="section-label" style={{ marginBottom: 0 }}>Chapters &amp; Content Tree</div>
+            <div className="section-label" style={{ marginBottom: 0 }}>Chapters &amp; Topics</div>
             <button
               onClick={() => {
                 setModalType('addChapter');
@@ -285,7 +428,7 @@ export default function SyllabusTracker() {
               style={{
                 fontSize: '11px', fontWeight: 800, color: 'var(--accent-sky)',
                 background: 'transparent', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '4px',
+                display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'Outfit, sans-serif',
               }}
             >
               <Plus size={14} /> Add Chapter
@@ -294,7 +437,7 @@ export default function SyllabusTracker() {
 
           {/* Chapters List */}
           {(currentSubject.chapters || []).length === 0 ? (
-            <div className="card text-center p-24" style={{ color: 'var(--text-muted)' }}>
+            <div className="card text-center" style={{ padding: '24px', color: 'var(--text-muted)' }}>
               <Folder size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
               <p style={{ fontSize: '13px', fontWeight: 600 }}>No chapters added yet.</p>
               <button
@@ -316,8 +459,8 @@ export default function SyllabusTracker() {
               return (
                 <div 
                   key={chap.id} 
-                  className="card mb-16"
-                  style={{ padding: '18px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)' }}
+                  className="card mb-12"
+                  style={{ padding: '14px 16px', background: 'var(--bg-card)' }}
                 >
                   {/* Chapter Level Header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -326,113 +469,69 @@ export default function SyllabusTracker() {
                       style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}
                     >
                       {isChapExpanded ? <ChevronDown size={18} color="var(--accent-sky)" /> : <ChevronRight size={18} color="var(--text-muted)" />}
-                      <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         📖 {chap.title}
                       </h3>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <button
-                        onClick={() => {
-                          setModalType('addTopic');
-                          setModalData({ subjectId: currentSubject.id, chapterId: chap.id });
-                          setInputTitle('');
-                        }}
-                        style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-sky)', background: 'var(--bg-secondary)', padding: '4px 10px', borderRadius: '99px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <Plus size={12} /> Topic
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setModalType('editItem');
-                          setModalData({ level: 'chapter', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id });
-                          setInputTitle(chap.title);
-                        }}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                      >
-                        <Edit3 size={14} />
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setModalType('deleteConfirm');
-                          setModalData({ level: 'chapter', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id, title: chap.title });
-                        }}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => openChapterMenu(chap)}
+                      style={{
+                        background: 'transparent', border: 'none',
+                        color: 'var(--text-muted)', cursor: 'pointer',
+                        padding: '4px', display: 'flex',
+                      }}
+                    >
+                      <MoreVertical size={16} />
+                    </button>
                   </div>
 
                   {/* Topics List */}
                   {isChapExpanded && (
-                    <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px', paddingLeft: '12px', borderLeft: '2px solid var(--glass-border)' }}>
+                    <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '10px', borderLeft: '2px solid var(--glass-border)' }}>
                       {(chap.topics || []).length === 0 ? (
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0' }}>
-                          No topics in this chapter. Tap + Topic above.
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
+                          No topics yet. Tap ⋮ on the chapter to add a topic.
                         </p>
                       ) : (
                         (chap.topics || []).map((top) => {
                           const isTopExpanded = expandedTopics[top.id] !== false;
 
                           return (
-                            <div key={top.id} style={{ background: 'var(--bg-secondary)', borderRadius: '14px', padding: '12px 14px' }}>
-                              {/* Topic Level Header */}
+                            <div key={top.id} style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '10px 12px' }}>
+                              {/* Topic Header */}
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <div 
                                   onClick={() => toggleTopicExpand(top.id)}
                                   style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', flex: 1 }}
                                 >
-                                  {isTopExpanded ? <ChevronDown size={16} color="var(--accent-sky)" /> : <ChevronRight size={16} color="var(--text-muted)" />}
+                                  {isTopExpanded ? <ChevronDown size={15} color="var(--accent-sky)" /> : <ChevronRight size={15} color="var(--text-muted)" />}
                                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
                                     📝 {top.title}
                                   </span>
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <button
-                                    onClick={() => {
-                                      setModalType('addSubTopic');
-                                      setModalData({ subjectId: currentSubject.id, chapterId: chap.id, topicId: top.id });
-                                      setInputTitle('');
-                                    }}
-                                    style={{ fontSize: '10px', fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 8px', borderRadius: '99px', border: 'none', cursor: 'pointer' }}
-                                  >
-                                    + Sub-topic
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setModalType('editItem');
-                                      setModalData({ level: 'topic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id, topicId: top.id });
-                                      setInputTitle(top.title);
-                                    }}
-                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                                  >
-                                    <Edit3 size={13} />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setModalType('deleteConfirm');
-                                      setModalData({ level: 'topic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id, topicId: top.id, title: top.title });
-                                    }}
-                                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                </div>
+                                <button
+                                  onClick={() => openTopicMenu(top, chap.id)}
+                                  style={{
+                                    background: 'transparent', border: 'none',
+                                    color: 'var(--text-muted)', cursor: 'pointer',
+                                    padding: '2px', display: 'flex',
+                                  }}
+                                >
+                                  <MoreVertical size={15} />
+                                </button>
                               </div>
 
                               {/* Sub-topics List */}
                               {isTopExpanded && (
-                                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '10px' }}>
+                                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px', paddingLeft: '8px' }}>
                                   {(top.subTopics || []).map((st) => (
                                     <div
                                       key={st.id}
                                       style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        padding: '8px 10px', borderRadius: '10px',
+                                        padding: '7px 9px', borderRadius: '8px',
                                         background: st.completed ? 'rgba(14, 165, 233, 0.08)' : 'var(--bg-card)',
                                         border: `1px solid ${st.completed ? 'rgba(14, 165, 233, 0.2)' : 'var(--glass-border)'}`,
                                       }}
@@ -442,9 +541,9 @@ export default function SyllabusTracker() {
                                         style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}
                                       >
                                         {st.completed ? (
-                                          <CheckSquare size={16} color="#0ea5e9" style={{ flexShrink: 0 }} />
+                                          <CheckSquare size={15} color="#0ea5e9" style={{ flexShrink: 0 }} />
                                         ) : (
-                                          <Square size={16} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                                          <Square size={15} color="var(--text-muted)" style={{ flexShrink: 0 }} />
                                         )}
                                         <span style={{
                                           fontSize: '12px', fontWeight: 600,
@@ -455,27 +554,12 @@ export default function SyllabusTracker() {
                                         </span>
                                       </div>
 
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <button
-                                          onClick={() => {
-                                            setModalType('editItem');
-                                            setModalData({ level: 'subTopic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id, topicId: top.id, subTopicId: st.id });
-                                            setInputTitle(st.title);
-                                          }}
-                                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                                        >
-                                          <Edit3 size={12} />
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            setModalType('deleteConfirm');
-                                            setModalData({ level: 'subTopic', courseId: currentCourse.id, subjectId: currentSubject.id, chapterId: chap.id, topicId: top.id, subTopicId: st.id, title: st.title });
-                                          }}
-                                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                                        >
-                                          <Trash2 size={12} />
-                                        </button>
-                                      </div>
+                                      <button
+                                        onClick={() => openSubTopicMenu(st, chap.id, top.id)}
+                                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
+                                      >
+                                        <MoreVertical size={13} />
+                                      </button>
                                     </div>
                                   ))}
                                 </div>
@@ -493,7 +577,67 @@ export default function SyllabusTracker() {
         </div>
       )}
 
-      {/* CRUD Modals */}
+      {/* ── Modern Bottom Action Sheet Modal ── */}
+      {actionSheet && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 999,
+          background: 'rgba(10, 16, 30, 0.65)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }} onClick={() => setActionSheet(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card)', borderRadius: '24px 24px 0 0',
+              width: '100%', maxWidth: '480px', padding: '20px 24px 36px',
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
+              animation: 'slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            <div style={{ width: 36, height: 4, background: 'var(--glass-border)', borderRadius: 99, margin: '0 auto 16px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-primary)' }}>
+                  {actionSheet.title}
+                </div>
+                {actionSheet.subtitle && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    {actionSheet.subtitle}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setActionSheet(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {actionSheet.actions.map((act, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setActionSheet(null);
+                    act.onClick();
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '13px 16px', borderRadius: '14px',
+                    background: act.danger ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-secondary)',
+                    border: 'none', cursor: 'pointer',
+                    color: act.danger ? '#ef4444' : 'var(--text-primary)',
+                    fontWeight: 700, fontSize: '13px', fontFamily: 'Outfit, sans-serif',
+                    textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: '16px' }}>{act.icon}</span>
+                  <span>{act.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CRUD Modals (Add / Edit / Delete Confirmation) ── */}
       {modalType && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 1000,
@@ -508,11 +652,11 @@ export default function SyllabusTracker() {
             {modalType === 'deleteConfirm' ? (
               <div>
                 <AlertTriangle size={36} color="#ef4444" style={{ margin: '0 auto 12px' }} />
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
                   Delete Item?
                 </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-                  Are you sure you want to delete <strong>"{modalData.title}"</strong> and all its sub-items?
+                  Are you sure you want to delete <strong>"{modalData.title}"</strong> and all nested content?
                 </p>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
@@ -531,7 +675,7 @@ export default function SyllabusTracker() {
               </div>
             ) : (
               <form onSubmit={handleModalSubmit}>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>
                   {modalType === 'editItem' ? 'Edit Item' : `Add New ${modalType.replace('add', '')}`}
                 </h3>
                 {modalType === 'addCourse' || modalType === 'addSubject' ? (
@@ -541,12 +685,7 @@ export default function SyllabusTracker() {
                     value={inputIcon}
                     onChange={(e) => setInputIcon(e.target.value)}
                     maxLength={4}
-                    style={{
-                      width: '100%', padding: '12px', borderRadius: '14px',
-                      background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
-                      color: 'var(--text-primary)', fontSize: '13px', outline: 'none',
-                      marginBottom: '12px', fontFamily: 'Outfit, sans-serif',
-                    }}
+                    className="flux-input mb-12"
                   />
                 ) : null}
                 <input
@@ -555,12 +694,7 @@ export default function SyllabusTracker() {
                   value={inputTitle}
                   onChange={(e) => setInputTitle(e.target.value)}
                   required
-                  style={{
-                    width: '100%', padding: '12px', borderRadius: '14px',
-                    background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
-                    color: 'var(--text-primary)', fontSize: '13px', outline: 'none',
-                    marginBottom: '20px', fontFamily: 'Outfit, sans-serif',
-                  }}
+                  className="flux-input mb-20"
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button

@@ -147,7 +147,7 @@ body {
   color: var(--text-primary);
   height: 100%;
   overflow: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior: contain;
   -webkit-font-smoothing: antialiased;
   user-select: none;
 }
@@ -195,6 +195,8 @@ body {
   padding-top: max(12px, env(safe-area-inset-top));
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: calc(var(--nav-height) + 12px);
 }
 
 .tab-page {
@@ -223,6 +225,21 @@ body {
     0 10px 30px rgba(15, 23, 42, 0.06),
     inset 0 1px 1px rgba(255, 255, 255, 0.8);
   transition: all var(--transition-normal);
+}
+
+.sticky-screen-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--bg-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 10px 18px 12px;
+  margin: -16px -18px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 body.dark-theme .page-header {

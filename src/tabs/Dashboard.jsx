@@ -38,7 +38,7 @@ function UserHeader({ onNavigate, onShare }) {
   };
 
   return (
-    <div className="flex items-center justify-between mb-24" style={{ paddingTop: '12px' }}>
+    <div className="sticky-screen-header">
       <div 
         className="flex items-center gap-12" 
         onClick={() => onNavigate && onNavigate('profile')} 
@@ -46,24 +46,24 @@ function UserHeader({ onNavigate, onShare }) {
       >
         {/* Avatar */}
         <div style={{
-          width: 52, height: 52,
+          width: 46, height: 46,
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontWeight: 800, fontSize: '24px',
-          boxShadow: '0 6px 20px rgba(14,165,233,0.35)',
-          border: '3px solid var(--bg-card)',
+          color: '#fff', fontWeight: 800, fontSize: '20px',
+          boxShadow: '0 4px 14px rgba(14,165,233,0.3)',
+          border: '2px solid var(--bg-card)',
           flexShrink: 0,
           overflow: 'hidden',
         }}>
-          <RenderAvatar avatar={userAvatar} name={userName} size={52} />
+          <RenderAvatar avatar={userAvatar} name={userName} size={46} />
         </div>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.4px' }}>
-            Hello, {userName} 👋
+          <h1 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', margin: 0 }}>
+            {userName}
           </h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '2px' }}>
-            Let's crush it today
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginTop: '2px' }}>
+            Daily Focus &amp; Goals
           </p>
         </div>
       </div>
