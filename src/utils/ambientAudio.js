@@ -1,10 +1,11 @@
-// Web Audio API Synthesizer for 100% Offline Ambient Sound Engine
-// Rich, soothing offline tracks: Indian Bamboo Flute, Relaxing Lo-Fi Chords, Zen 432Hz, Soft Rain
+// FLUX Web Audio API Synthesizer - Ambient & Meditation Audio Engine
 
 class AmbientAudioEngine {
   constructor() {
     this.ctx = null;
     this.activeNodes = {};
+    this.masterGain = null;
+    this.volume = 0.8;
   }
 
   initCtx() {
@@ -13,6 +14,9 @@ class AmbientAudioEngine {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
           this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = this.volume;
+          this.masterGain.connect(this.ctx.destination);
         }
       }
       if (this.ctx && this.ctx.state === 'suspended') {
@@ -23,7 +27,121 @@ class AmbientAudioEngine {
     }
   }
 
-  // 1. Indian Bamboo Flute Melodic Synthesizer
+  setMasterVolume(val) {
+    this.volume = Math.max(0, Math.min(1, val));
+    if (this.masterGain && this.ctx) {
+      try {
+        this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+      } catch (e) {}
+    }
+  }
+
+  // 1. Tanpura Meditation Drone (136.1 Hz Om Root + Pa Harmonic Drone)
+  playTanpuraMeditation() {
+    try {
+      this.initCtx();
+      this.stopAll();
+      if (!this.ctx) return;
+
+      const sa = 136.1; // Sacred Om Frequency (C#2)
+      const pa = 204.15; // Fifth (G#2)
+      const saHigh = 272.2; // High Octave (C#3)
+
+      const freqs = [pa, saHigh, saHigh, sa];
+      const gains = [];
+      const oscs = [];
+
+      freqs.forEach((f, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.value = f;
+
+        // Subtle LFO modulation for authentic Tanpura string plucking cycle
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.frequency.value = 0.25 + idx * 0.08; // Slow 4-second cycling phase
+        lfoGain.gain.value = 0.03;
+        lfo.connect(gain.gain);
+        lfo.start();
+
+        gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain || this.ctx.destination);
+        osc.start();
+
+        oscs.push(osc);
+        gains.push(gain);
+      });
+
+      this.activeNodes['meditation_tanpura'] = { oscs, gains, active: true };
+    } catch (e) {
+      console.warn('[AudioEngine] Tanpura meditation error:', e);
+    }
+  }
+
+  // 2. Study Brown Noise + Soft Ambient Pad (Focus Masking)
+  playStudyBrownNoise() {
+    try {
+      this.initCtx();
+      this.stopAll();
+      if (!this.ctx) return;
+
+      // Generate 5-second loop of Brown Noise
+      const bufferSize = this.ctx.sampleRate * 5;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let lastOut = 0.0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        data[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = data[i];
+        data[i] *= 3.5; // Soft warm gain normalization
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+
+      // Low-pass filter for smooth deep study rumble
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 350;
+
+      const gain = this.ctx.createGain();
+      gain.gain.value = 0.18;
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain || this.ctx.destination);
+      noise.start();
+
+      // Soft 432Hz ambient chord pad under Brown Noise
+      const chordOsc1 = this.ctx.createOscillator();
+      const chordOsc2 = this.ctx.createOscillator();
+      chordOsc1.type = 'sine';
+      chordOsc1.frequency.value = 216;
+      chordOsc2.type = 'sine';
+      chordOsc2.frequency.value = 432;
+
+      const chordGain = this.ctx.createGain();
+      chordGain.gain.value = 0.03;
+
+      chordOsc1.connect(chordGain);
+      chordOsc2.connect(chordGain);
+      chordGain.connect(this.masterGain || this.ctx.destination);
+      chordOsc1.start();
+      chordOsc2.start();
+
+      this.activeNodes['study_brown'] = { noise, gain, chordOsc1, chordOsc2, active: true };
+    } catch (e) {
+      console.warn('[AudioEngine] Study Brown Noise error:', e);
+    }
+  }
+
+  // 3. Indian Bamboo Flute Melodic Synthesizer
   playFlute() {
     try {
       this.initCtx();
@@ -55,7 +173,7 @@ class AmbientAudioEngine {
           gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 3.2);
 
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.masterGain || this.ctx.destination);
 
           osc.start();
           osc.stop(this.ctx.currentTime + 3.3);
@@ -75,7 +193,7 @@ class AmbientAudioEngine {
     }
   }
 
-  // 2. Chill Lo-Fi Chillhop Harmonic Chords
+  // 4. Relaxing Lo-Fi Chords
   playLofi() {
     try {
       this.initCtx();
@@ -95,7 +213,7 @@ class AmbientAudioEngine {
       const crackleGain = this.ctx.createGain();
       crackleGain.gain.value = 0.08;
       crackle.connect(crackleGain);
-      crackleGain.connect(this.ctx.destination);
+      crackleGain.connect(this.masterGain || this.ctx.destination);
       crackle.start();
 
       const chords = [
@@ -127,7 +245,7 @@ class AmbientAudioEngine {
 
             osc.connect(filter);
             filter.connect(gain);
-            gain.connect(this.ctx.destination);
+            gain.connect(this.masterGain || this.ctx.destination);
 
             osc.start();
             osc.stop(this.ctx.currentTime + 4.0);
@@ -147,38 +265,7 @@ class AmbientAudioEngine {
     }
   }
 
-  // 3. Deep 432Hz Meditation Healing Drone
-  playMeditation() {
-    try {
-      this.initCtx();
-      this.stopAll();
-      if (!this.ctx) return;
-
-      const osc1 = this.ctx.createOscillator();
-      const osc2 = this.ctx.createOscillator();
-
-      osc1.type = 'sine';
-      osc1.frequency.value = 432;
-
-      osc2.type = 'sine';
-      osc2.frequency.value = 216;
-
-      const gain = this.ctx.createGain();
-      gain.gain.value = 0.08;
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc1.start();
-      osc2.start();
-      this.activeNodes['meditation'] = { osc1, osc2, gain, active: true };
-    } catch (e) {
-      console.warn('[AudioEngine] playMeditation error:', e);
-    }
-  }
-
-  // 4. Soft Rain
+  // 5. Soft Rain
   playRain() {
     try {
       this.initCtx();
@@ -205,7 +292,7 @@ class AmbientAudioEngine {
 
       noise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain || this.ctx.destination);
 
       noise.start();
       this.activeNodes['rain'] = { noise, gain, active: true };
@@ -220,10 +307,12 @@ class AmbientAudioEngine {
         const node = this.activeNodes[type];
         if (node.interval) clearInterval(node.interval);
         if (node.chordInterval) clearInterval(node.chordInterval);
+        if (node.oscs) { node.oscs.forEach((o) => { try { o.stop(); o.disconnect(); } catch (e) {} }); }
+        if (node.gains) { node.gains.forEach((g) => { try { g.disconnect(); } catch (e) {} }); }
         if (node.crackle) { try { node.crackle.stop(); node.crackle.disconnect(); } catch (e) {} }
         if (node.noise) { try { node.noise.stop(); node.noise.disconnect(); } catch (e) {} }
-        if (node.osc1) { try { node.osc1.stop(); node.osc1.disconnect(); } catch (e) {} }
-        if (node.osc2) { try { node.osc2.stop(); node.osc2.disconnect(); } catch (e) {} }
+        if (node.chordOsc1) { try { node.chordOsc1.stop(); node.chordOsc1.disconnect(); } catch (e) {} }
+        if (node.chordOsc2) { try { node.chordOsc2.stop(); node.chordOsc2.disconnect(); } catch (e) {} }
         if (node.gain) { try { node.gain.disconnect(); } catch (e) {} }
       } catch (e) {}
       delete this.activeNodes[type];

@@ -4,7 +4,7 @@ import { writeData } from '../sync/syncManager';
 import { auth } from '../firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 
-// ─── Level System (Harder & Compounding Thresholds) ───────────────────────────
+// ─── Level System ─────────────────────────────────────────────────────────────
 const LEVEL_THRESHOLDS = [0, 300, 800, 1800, 3500, 6000, 10000, 16000, 25000, 38000, 55000];
 const LEVEL_NAMES = [
   '', 'Novice', 'Apprentice', 'Focused', 'Disciplined',
@@ -45,8 +45,7 @@ export const ACHIEVEMENTS = [
   { id: 'points_100',  emoji: '💎', title: 'First Hundred', desc: '100 points earned',   check: (s) => s.points >= 100 },
   { id: 'points_500',  emoji: '🥇', title: 'High Scorer',   desc: '500 points earned',   check: (s) => s.points >= 500 },
   { id: 'points_1000', emoji: '🚀', title: 'Point Master',  desc: '1000 points earned',  check: (s) => s.points >= 1000 },
-  { id: 'tasks_first', emoji: '✅', title: 'First Step',    desc: 'Complete first task',         check: (s) => s.roadmapTasks.some(t => t.completed) },
-  { id: 'tasks_day',   emoji: '💯', title: 'Day Crusher',   desc: 'Complete all tasks in a day', check: (s) => s.roadmapTasks.length > 0 && s.roadmapTasks.every(t => t.completed) },
+  { id: 'tasks_first', emoji: '✅', title: 'First Step',    desc: 'Complete first task',         check: (s) => (s.todos || []).some(t => t.completed) },
 ];
 
 const initialFocusData = () => {
@@ -63,7 +62,118 @@ const initialFocusData = () => {
   return days;
 };
 
-// Default initial goals each with their own isolated milestones
+// Default Initial 4-Level Course Hierarchy (Course -> Subject -> Chapter -> Topic -> Sub-topic)
+const DEFAULT_COURSES = [
+  {
+    id: 'course_gate_cs',
+    title: 'GATE CSE & IT 2026',
+    category: 'Engineering',
+    icon: '💻',
+    subjects: [
+      {
+        id: 'sub_dsa',
+        title: 'Data Structures & Algorithms',
+        icon: '🌳',
+        chapters: [
+          {
+            id: 'chap_trees',
+            title: 'Trees & Heaps',
+            topics: [
+              {
+                id: 'top_bst',
+                title: 'Binary Search Trees & Balancing',
+                subTopics: [
+                  { id: 'st_bst_1', title: 'BST Insertion & Deletion Properties', completed: true },
+                  { id: 'st_bst_2', title: 'AVL Tree Single & Double Rotations', completed: false },
+                  { id: 'st_bst_3', title: 'Red-Black Tree Black Height Invariant', completed: false }
+                ]
+              },
+              {
+                id: 'top_heaps',
+                title: 'Heap Data Structures & Priority Queues',
+                subTopics: [
+                  { id: 'st_heap_1', title: 'Min-Heapify & Max-Heapify Operations', completed: true },
+                  { id: 'st_heap_2', title: 'Build-Heap O(N) Time Proof', completed: false }
+                ]
+              }
+            ]
+          },
+          {
+            id: 'chap_graphs',
+            title: 'Graph Algorithms',
+            topics: [
+              {
+                id: 'top_traversals',
+                title: 'BFS & DFS Applications',
+                subTopics: [
+                  { id: 'st_g_1', title: 'Cycle Detection in Directed & Undirected Graphs', completed: true },
+                  { id: 'st_g_2', title: 'Dijkstra & Bellman-Ford Shortest Paths', completed: false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'sub_os',
+        title: 'Operating Systems',
+        icon: '⚡',
+        chapters: [
+          {
+            id: 'chap_sync',
+            title: 'Process Synchronization & Deadlocks',
+            topics: [
+              {
+                id: 'top_deadlocks',
+                title: 'Deadlock Prevention & Banker Algorithm',
+                subTopics: [
+                  { id: 'st_os_1', title: 'Four Necessary Conditions for Deadlock', completed: true },
+                  { id: 'st_os_2', title: 'Banker Safety State Checking Algorithm', completed: false }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'course_eng_maths',
+    title: 'Engineering Mathematics',
+    category: 'Mathematics',
+    icon: '📐',
+    subjects: [
+      {
+        id: 'sub_la',
+        title: 'Linear Algebra',
+        icon: '📊',
+        chapters: [
+          {
+            id: 'chap_matrices',
+            title: 'Matrix Theory & Linear Systems',
+            topics: [
+              {
+                id: 'top_eigen',
+                title: 'Eigenvalues & Eigenvectors',
+                subTopics: [
+                  { id: 'st_la_1', title: 'Characteristic Equation & Trace/Det Theorem', completed: true },
+                  { id: 'st_la_2', title: 'Cayley-Hamilton Theorem Applications', completed: false }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+
+const DEFAULT_TODOS = [
+  { id: 't_1', title: 'Solve 15 GATE PYQs on Binary Search Trees', completed: false, priority: 'high', category: 'Study' },
+  { id: 't_2', title: 'Complete 45-minute Deep Focus Session', completed: true, priority: 'medium', category: 'Focus' },
+  { id: 't_3', title: 'Review Operating Systems Synchronization Notes', completed: false, priority: 'normal', category: 'Revision' },
+];
+
 const DEFAULT_INITIAL_GOALS = [
   {
     id: 'c_gate_master',
@@ -131,7 +241,6 @@ const useStore = create(
             });
           } else {
             const currentUserId = get().userId;
-            // If user was using Firebase Auth and logged out
             if (currentUserId && !currentUserId.startsWith('guest_')) {
               set({
                 isAuthenticated: false,
@@ -159,14 +268,13 @@ const useStore = create(
         });
       },
 
-      // === Gamification & Streak Freeze ===
+      // === Gamification & Streak ===
       streak: 0,
       points: 0,
       streakFreezeTokens: 2,
       isRestMode: false,
       lastActiveDate: new Date().toISOString().split('T')[0],
 
-      // Activate Streak Freeze / Rest Day Mode
       activateStreakFreeze: () => {
         const state = get();
         if (state.streakFreezeTokens <= 0) return false;
@@ -195,15 +303,268 @@ const useStore = create(
       focusSessions: initialFocusData(),
       currentSessionDistractions: 0,
 
-      // === Active Multi-Goal System (Starts Empty for User's Custom Goals) ===
-      activeChallenges: [],
-      selectedChallengeId: null,
+      // === Active Multi-Goal System ===
+      activeChallenges: DEFAULT_INITIAL_GOALS,
+      selectedChallengeId: 'c_gate_master',
 
-      // Helper to get active milestones for current selected goal
       getActiveMilestones: () => {
         const state = get();
         const cur = state.activeChallenges.find((c) => c.id === state.selectedChallengeId) || state.activeChallenges[0];
         return cur ? (cur.milestones || []) : [];
+      },
+
+      // === 4-Level Course Hierarchy State ===
+      courses: DEFAULT_COURSES,
+
+      // Course Actions
+      addCourse: (title, category = 'General', icon = '📚') => {
+        const newCourse = { id: `c_${Date.now()}`, title: title.trim(), category, icon, subjects: [] };
+        set((s) => ({ courses: [...s.courses, newCourse] }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      editCourse: (courseId, updates) => {
+        set((s) => ({
+          courses: s.courses.map((c) => (c.id === courseId ? { ...c, ...updates } : c)),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      deleteCourse: (courseId) => {
+        set((s) => ({ courses: s.courses.filter((c) => c.id !== courseId) }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+
+      // Subject Actions
+      addSubject: (courseId, title, icon = '📘') => {
+        const newSub = { id: `sub_${Date.now()}`, title: title.trim(), icon, chapters: [] };
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? { ...c, subjects: [...(c.subjects || []), newSub] } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      editSubject: (courseId, subjectId, updates) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? { ...sub, ...updates } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      deleteSubject: (courseId, subjectId) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).filter((sub) => sub.id !== subjectId),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+
+      // Chapter Actions
+      addChapter: (courseId, subjectId, title) => {
+        const newChap = { id: `chap_${Date.now()}`, title: title.trim(), topics: [] };
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: [...(sub.chapters || []), newChap],
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      editChapter: (courseId, subjectId, chapterId, updates) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? { ...ch, ...updates } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      deleteChapter: (courseId, subjectId, chapterId) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).filter((ch) => ch.id !== chapterId),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+
+      // Topic Actions
+      addTopic: (courseId, subjectId, chapterId, title) => {
+        const newTop = { id: `top_${Date.now()}`, title: title.trim(), subTopics: [] };
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: [...(ch.topics || []), newTop],
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      editTopic: (courseId, subjectId, chapterId, topicId, updates) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: (ch.topics || []).map((tp) => tp.id === topicId ? { ...tp, ...updates } : tp),
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      deleteTopic: (courseId, subjectId, chapterId, topicId) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: (ch.topics || []).filter((tp) => tp.id !== topicId),
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+
+      // Sub-topic Actions
+      addSubTopic: (courseId, subjectId, chapterId, topicId, title) => {
+        const newSubTop = { id: `st_${Date.now()}`, title: title.trim(), completed: false };
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: (ch.topics || []).map((tp) => tp.id === topicId ? {
+                  ...tp,
+                  subTopics: [...(tp.subTopics || []), newSubTop],
+                } : tp),
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      editSubTopic: (courseId, subjectId, chapterId, topicId, subTopicId, updates) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: (ch.topics || []).map((tp) => tp.id === topicId ? {
+                  ...tp,
+                  subTopics: (tp.subTopics || []).map((st) => st.id === subTopicId ? { ...st, ...updates } : st),
+                } : tp),
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      deleteSubTopic: (courseId, subjectId, chapterId, topicId, subTopicId) => {
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: (ch.topics || []).map((tp) => tp.id === topicId ? {
+                  ...tp,
+                  subTopics: (tp.subTopics || []).filter((st) => st.id !== subTopicId),
+                } : tp),
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        writeData('users', 'courses', { courses: get().courses });
+      },
+      toggleSubTopicComplete: (courseId, subjectId, chapterId, topicId, subTopicId) => {
+        let earned = false;
+        set((s) => ({
+          courses: s.courses.map((c) => c.id === courseId ? {
+            ...c,
+            subjects: (c.subjects || []).map((sub) => sub.id === subjectId ? {
+              ...sub,
+              chapters: (sub.chapters || []).map((ch) => ch.id === chapterId ? {
+                ...ch,
+                topics: (ch.topics || []).map((tp) => tp.id === topicId ? {
+                  ...tp,
+                  subTopics: (tp.subTopics || []).map((st) => {
+                    if (st.id === subTopicId) {
+                      const next = !st.completed;
+                      if (next) earned = true;
+                      return { ...st, completed: next };
+                    }
+                    return st;
+                  }),
+                } : tp),
+              } : ch),
+            } : sub),
+          } : c),
+        }));
+        if (earned) {
+          get().addPoints(15);
+        }
+        writeData('users', 'courses', { courses: get().courses });
+      },
+
+      // === Todo System State & Actions ===
+      todos: DEFAULT_TODOS,
+
+      addTodo: (title, priority = 'medium', category = 'General') => {
+        const newTodo = { id: `todo_${Date.now()}`, title: title.trim(), completed: false, priority, category };
+        set((s) => ({ todos: [newTodo, ...s.todos] }));
+        writeData('users', 'todos', { todos: get().todos });
+      },
+      editTodo: (todoId, updates) => {
+        set((s) => ({ todos: s.todos.map((t) => (t.id === todoId ? { ...t, ...updates } : t)) }));
+        writeData('users', 'todos', { todos: get().todos });
+      },
+      deleteTodo: (todoId) => {
+        set((s) => ({ todos: s.todos.filter((t) => t.id !== todoId) }));
+        writeData('users', 'todos', { todos: get().todos });
+      },
+      toggleTodo: (todoId) => {
+        let earned = false;
+        set((s) => ({
+          todos: s.todos.map((t) => {
+            if (t.id === todoId) {
+              const next = !t.completed;
+              if (next) earned = true;
+              return { ...t, completed: next };
+            }
+            return t;
+          }),
+        }));
+        if (earned) {
+          get().addPoints(10);
+        }
+        writeData('users', 'todos', { todos: get().todos });
       },
 
       // === Journal & Tribe ===
@@ -252,7 +613,6 @@ const useStore = create(
         return newUnlocks;
       },
 
-      // Add a New Goal / Challenge with its own ISOLATED milestones
       addChallenge: (newChallenge, initialMilestones = []) => {
         const challengeObj = {
           id: `c_${Date.now()}`,
@@ -268,12 +628,10 @@ const useStore = create(
         writeData('users', 'challenges', { challenges: get().activeChallenges });
       },
 
-      // Select Active Goal
       selectChallenge: (challengeId) => {
         set({ selectedChallengeId: challengeId });
       },
 
-      // Delete a Goal / Challenge
       deleteChallenge: (challengeId) => {
         set((state) => {
           const updatedChallenges = state.activeChallenges.filter((c) => c.id !== challengeId);
@@ -286,7 +644,6 @@ const useStore = create(
         writeData('users', 'challenges', { challenges: get().activeChallenges });
       },
 
-      // Add a custom milestone strictly into the CURRENT selected goal's milestones array
       addMilestone: (milestone) => {
         const newMilestone = {
           id: `milestone_${Date.now()}`,
@@ -318,7 +675,6 @@ const useStore = create(
         writeData('users', 'challenges', { challenges: get().activeChallenges });
       },
 
-      // Delete a milestone strictly from the CURRENT selected goal
       deleteMilestone: (milestoneId) => {
         set((state) => {
           const updatedChallenges = state.activeChallenges.map((c) => {
@@ -337,7 +693,6 @@ const useStore = create(
         writeData('users', 'challenges', { challenges: get().activeChallenges });
       },
 
-      // Complete a milestone in the current goal
       completeRoadmapTask: (taskId) => {
         const state = get();
         const currentGoal = state.activeChallenges.find((c) => c.id === state.selectedChallengeId);
@@ -381,7 +736,6 @@ const useStore = create(
           } else {
             updated = [...updated, { date: today, hours: parseFloat(hoursToAdd.toFixed(2)) }];
           }
-          // Cap total historical focus session retention to 365 days maximum
           const boundedSessions = updated.slice(-365);
           return {
             focusSessions: boundedSessions,
@@ -405,7 +759,6 @@ const useStore = create(
         writeData('users', 'journal', { entries: get().journalEntries });
       },
 
-      // Edit Journal Entry
       editJournalEntry: (entryId, newText, newRating) => {
         set((state) => ({
           journalEntries: state.journalEntries.map((e) =>
@@ -415,7 +768,6 @@ const useStore = create(
         writeData('users', 'journal', { entries: get().journalEntries });
       },
 
-      // Delete Journal Entry
       deleteJournalEntry: (entryId) => {
         set((state) => ({
           journalEntries: state.journalEntries.filter((e) => e.id !== entryId),
@@ -432,14 +784,14 @@ const useStore = create(
       },
 
       clearAllData: () => {
-        ['flux-storage-v4', 'flux-sync-queue', 'flux-onboarding-done', 'flux-ai-cache', 'flux-ai-rates'].forEach((k) => {
+        ['flux-storage-v5', 'flux-sync-queue', 'flux-onboarding-done', 'flux-ai-cache', 'flux-ai-rates'].forEach((k) => {
           localStorage.removeItem(k);
         });
         window.location.reload();
       },
     }),
     {
-      name: 'flux-storage-v4',
+      name: 'flux-storage-v5',
       partialize: (state) => ({
         userName: state.userName,
         userAvatar: state.userAvatar,
@@ -458,6 +810,8 @@ const useStore = create(
         journalEntries: state.journalEntries,
         joinedChallenges: state.joinedChallenges,
         currentSessionDistractions: state.currentSessionDistractions,
+        courses: state.courses,
+        todos: state.todos,
       }),
     }
   )

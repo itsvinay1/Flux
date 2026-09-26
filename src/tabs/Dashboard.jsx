@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Trophy, Zap, Play, BarChart2, Sparkles, Sun, Moon, Map, Share2, Plus } from 'lucide-react';
+import { Flame, Trophy, Zap, Play, BarChart2, Sparkles, Sun, Moon, Map, Share2, Plus, CheckSquare, Square, Trash2 } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -487,6 +487,125 @@ function FocusGraph() {
   );
 }
 
+function TodoSection() {
+  const todos = useStore((s) => s.todos) || [];
+  const addTodo = useStore((s) => s.addTodo);
+  const toggleTodo = useStore((s) => s.toggleTodo);
+  const deleteTodo = useStore((s) => s.deleteTodo);
+
+  const [inputTitle, setInputTitle] = useState('');
+  const [filter, setFilter] = useState('all');
+
+  const handleAdd = (e) => {
+    e.preventDefault();
+    if (!inputTitle.trim()) return;
+    addTodo(inputTitle.trim(), 'medium', 'General');
+    setInputTitle('');
+    showToast('Todo item added! 📝', '✨');
+  };
+
+  const filteredTodos = todos.filter((t) => {
+    if (filter === 'pending') return !t.completed;
+    if (filter === 'completed') return t.completed;
+    return true;
+  });
+
+  return (
+    <div className="card mb-16" style={{ padding: '22px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <CheckSquare size={18} color="var(--accent-sky)" />
+          <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>Today's Todo List</h3>
+        </div>
+        <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-secondary)', padding: '3px', borderRadius: '12px' }}>
+          {['all', 'pending', 'completed'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                fontSize: '10px', fontWeight: 700, padding: '4px 8px', borderRadius: '8px', border: 'none',
+                background: filter === f ? 'var(--bg-card)' : 'transparent',
+                color: filter === f ? 'var(--text-primary)' : 'var(--text-muted)',
+                cursor: 'pointer', textTransform: 'capitalize',
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+        <input
+          type="text"
+          placeholder="Add a new task..."
+          value={inputTitle}
+          onChange={(e) => setInputTitle(e.target.value)}
+          style={{
+            flex: 1, padding: '10px 14px', borderRadius: '12px',
+            background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+            color: 'var(--text-primary)', fontSize: '13px', outline: 'none',
+            fontFamily: 'Outfit, sans-serif',
+          }}
+        />
+        <button
+          type="submit"
+          disabled={!inputTitle.trim()}
+          style={{
+            padding: '10px 16px', borderRadius: '12px',
+            background: 'var(--accent-sky)', color: '#fff', border: 'none',
+            fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+            opacity: inputTitle.trim() ? 1 : 0.5,
+          }}
+        >
+          Add
+        </button>
+      </form>
+
+      {/* List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {filteredTodos.length === 0 ? (
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+            No todos found for this view.
+          </p>
+        ) : (
+          filteredTodos.map((todo) => (
+            <div
+              key={todo.id}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 12px', borderRadius: '12px',
+                background: todo.completed ? 'rgba(14, 165, 233, 0.06)' : 'var(--bg-secondary)',
+                border: `1px solid ${todo.completed ? 'rgba(14, 165, 233, 0.2)' : 'var(--glass-border)'}`,
+              }}
+            >
+              <div 
+                onClick={() => toggleTodo(todo.id)}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1 }}
+              >
+                {todo.completed ? <CheckSquare size={18} color="#0ea5e9" /> : <Square size={18} color="var(--text-muted)" />}
+                <span style={{
+                  fontSize: '13px', fontWeight: 600,
+                  color: todo.completed ? 'var(--text-muted)' : 'var(--text-primary)',
+                  textDecoration: todo.completed ? 'line-through' : 'none',
+                }}>
+                  {todo.title}
+                </span>
+              </div>
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                style={{ background: 'none', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer' }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({ onNavigate }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCreateGoalModal, setShowCreateGoalModal] = useState(false);
@@ -505,6 +624,7 @@ export default function Dashboard({ onNavigate }) {
       <AICoachCard />
       <StatsRow />
       <ChallengeCard onNavigate={onNavigate} onCreateGoal={() => setShowCreateGoalModal(true)} />
+      <TodoSection />
       <FocusGraph />
       <div style={{ marginTop: '16px' }}>
         <ConsistencyHeatmap focusSessions={focusSessions} />

@@ -245,13 +245,21 @@ export default function FocusTimer() {
     showToast('Urge logged. Stay strong! 💪', '⚡');
   };
 
+  const [volume, setVolume] = useState(0.8);
+
+  useEffect(() => {
+    try {
+      audioEngine.setMasterVolume(volume);
+    } catch (e) {}
+  }, [volume]);
+
   useEffect(() => {
     if (isRunning) {
-      // Automatically resume selected ambient sound when timer is running
       try {
+        if (activeSound === 'meditation') audioEngine.playTanpuraMeditation();
+        if (activeSound === 'study') audioEngine.playStudyBrownNoise();
         if (activeSound === 'flute') audioEngine.playFlute();
         if (activeSound === 'lofi') audioEngine.playLofi();
-        if (activeSound === 'meditation') audioEngine.playMeditation();
         if (activeSound === 'rain') audioEngine.playRain();
       } catch (e) {}
 
@@ -484,20 +492,38 @@ export default function FocusTimer() {
       <div className="card" style={{ width: '100%', padding: '18px 20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            <Volume2 size={16} color="var(--accent-sky)" /> Ambient Focus Audio
+            <Volume2 size={16} color="var(--accent-sky)" /> Ambient Focus &amp; Meditation Audio
           </div>
           <span style={{ fontSize: '10px', background: 'rgba(14,165,233,0.1)', color: '#0284c7', padding: '3px 8px', borderRadius: 99, fontWeight: 700 }}>
             100% Offline
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+        {/* Volume Slider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '12px' }}>
+          <Volume2 size={14} color="var(--text-muted)" />
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            style={{ flex: 1, accentColor: 'var(--accent-sky)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', minWidth: '32px', textAlign: 'right' }}>
+            {Math.round(volume * 100)}%
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
           {[
-            { id: 'off', label: 'Off', icon: <Volume2 size={14} /> },
-            { id: 'flute', label: '🪈 Flute', icon: <Radio size={14} /> },
-            { id: 'lofi', label: '☕ Lo-Fi', icon: <Zap size={14} /> },
-            { id: 'meditation', label: '🧘 432Hz', icon: <Zap size={14} /> },
-            { id: 'rain', label: '🌧️ Rain', icon: <CloudRain size={14} /> },
+            { id: 'off', label: 'Off', icon: <Volume2 size={13} /> },
+            { id: 'meditation', label: '🧘 Om', icon: <Zap size={13} /> },
+            { id: 'study', label: '📖 Study', icon: <Zap size={13} /> },
+            { id: 'flute', label: '🪈 Flute', icon: <Radio size={13} /> },
+            { id: 'lofi', label: '☕ Lo-Fi', icon: <Zap size={13} /> },
+            { id: 'rain', label: '🌧️ Rain', icon: <CloudRain size={13} /> },
           ].map((snd) => {
             const isActive = activeSound === snd.id;
             return (
@@ -507,9 +533,10 @@ export default function FocusTimer() {
                   setActiveSound(snd.id);
                   if (isRunning) {
                     audioEngine.stopAll();
+                    if (snd.id === 'meditation') audioEngine.playTanpuraMeditation();
+                    if (snd.id === 'study') audioEngine.playStudyBrownNoise();
                     if (snd.id === 'flute') audioEngine.playFlute();
                     if (snd.id === 'lofi') audioEngine.playLofi();
-                    if (snd.id === 'meditation') audioEngine.playMeditation();
                     if (snd.id === 'rain') audioEngine.playRain();
                   }
                   if (snd.id !== 'off') {
@@ -518,12 +545,12 @@ export default function FocusTimer() {
                 }}
                 style={{
                   padding: '8px 2px',
-                  borderRadius: '14px',
+                  borderRadius: '12px',
                   border: `1.5px solid ${isActive ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
                   background: isActive ? 'rgba(14,165,233,0.1)' : 'var(--bg-card)',
                   color: isActive ? 'var(--accent-sky)' : 'var(--text-secondary)',
                   fontWeight: 700,
-                  fontSize: '10px',
+                  fontSize: '9px',
                   cursor: 'pointer',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
                   transition: 'all 0.2s ease',
