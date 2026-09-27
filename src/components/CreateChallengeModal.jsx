@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, Layers } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 export default function CreateChallengeModal({ onClose }) {
   const addChallenge = useStore((s) => s.addChallenge);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [emoji, setEmoji] = useState('🔥');
+  const [emoji, setEmoji] = useState('🎯');
   const [totalDays, setTotalDays] = useState(60);
 
   // Custom Milestones Creation State
@@ -18,6 +20,11 @@ export default function CreateChallengeModal({ onClose }) {
     'Afternoon Practice & Problem Solving',
     'Evening Review & Test Analysis',
   ]);
+
+  useEffect(() => {
+    lockScroll();
+    return () => unlockScroll();
+  }, []);
 
   const handleCountChange = (count) => {
     const num = Math.min(10, Math.max(1, Number(count) || 1));
@@ -62,26 +69,46 @@ export default function CreateChallengeModal({ onClose }) {
       completedDays: 1,
     }, initialTasks);
 
-    showToast(`New Goal "${title.trim()}" with ${milestoneHeadings.length} milestones created! 🚀`, '✨');
+    showToast(`New Goal "${title.trim()}" created`, 'check');
     onClose();
   };
 
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 999,
-      background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
-    }} onClick={onClose}>
+  return createPortal(
+    <div
+      style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 9999,
+        background: 'rgba(15,23,42,0.7)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
+      }}
+      onClick={onClose}
+    >
       <div 
         onClick={(e) => e.stopPropagation()} 
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
-          background: 'var(--bg-card)', borderRadius: '28px', padding: '28px',
-          width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto',
+          background: 'var(--bg-card)',
+          borderRadius: '24px',
+          padding: '28px 24px',
+          width: '100%',
+          maxWidth: '420px',
+          maxHeight: '85dvh',
+          overflowY: 'auto',
           boxShadow: 'var(--shadow-card-md)',
-          animation: 'slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+          animation: 'slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+          touchAction: 'pan-y',
+          border: '1px solid var(--glass-border)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
           <div style={{
             width: 36, height: 36, borderRadius: '12px',
             background: 'var(--accent-sky)', color: '#fff',
@@ -89,7 +116,7 @@ export default function CreateChallengeModal({ onClose }) {
           }}>
             <Plus size={20} />
           </div>
-          <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
             Create Custom Goal Roadmap
           </h3>
         </div>
@@ -164,7 +191,7 @@ export default function CreateChallengeModal({ onClose }) {
           <button
             onClick={onClose}
             className="btn btn-ghost flex-1"
-            style={{ borderRadius: '16px' }}
+            style={{ borderRadius: '14px' }}
           >
             Cancel
           </button>
@@ -172,12 +199,13 @@ export default function CreateChallengeModal({ onClose }) {
             onClick={handleCreate}
             disabled={!title.trim()}
             className="btn btn-primary flex-1"
-            style={{ borderRadius: '16px' }}
+            style={{ borderRadius: '14px' }}
           >
             Activate Goal
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,17 +1,17 @@
 /**
- * FLUX — Offline-First Sync Architecture
+ * FLUX - Offline-First Sync Architecture
  * 
  * How it works:
  * 1. ALL data writes go to localStorage FIRST (instant, always works)
- * 2. If online → also write to Firebase immediately
- * 3. If offline → queue the write in syncQueue
- * 4. When connection restores → flush syncQueue to Firebase
- * 5. Firebase is ONLY a backup/sync layer — app NEVER depends on it
+ * 2. If online -> also write to Firebase immediately
+ * 3. If offline -> queue the write in syncQueue
+ * 4. When connection restores -> flush syncQueue to Firebase
+ * 5. Firebase is ONLY a backup/sync layer - app NEVER depends on it
  * 
  * Security:
  * - Data is stored in localStorage under a namespaced key
  * - On native Android (Capacitor), this maps to the app's private data directory
- *   (/data/data/com.flux.app/) — inaccessible to other apps without root
+ *   (/data/data/com.flux.app/) - inaccessible to other apps without root
  * - No other browser/app can read a different origin's localStorage
  */
 
@@ -169,7 +169,7 @@ export function initNetworkListeners() {
 }
 
 // ─── Data Write Helper ────────────────────────────────────────────────────────
-// Use this for every data mutation — handles local + sync automatically
+// Use this for every data mutation - handles local + sync automatically
 export function writeData(collection, docId, data) {
   const { isOnline } = useNetworkStore.getState();
   const { enqueue } = useSyncQueue.getState();
@@ -182,11 +182,11 @@ export function writeData(collection, docId, data) {
   if (isOnline) {
     // Try to write immediately
     writeToFirebase(collection, docId, data).catch(() => {
-      // Failed even though online — queue it
+      // Failed even though online - queue it
       enqueue(op);
     });
   } else {
-    // Offline — queue for later
+    // Offline - queue for later
     enqueue(op);
     useNetworkStore.getState().setSyncStatus('pending');
   }

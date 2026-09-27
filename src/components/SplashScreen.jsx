@@ -29,7 +29,7 @@ export default function SplashScreen({ onFinish }) {
         position: 'fixed',
         inset: 0,
         zIndex: 99999,
-        background: 'radial-gradient(circle at 50% 40%, #1e1b4b 0%, #0f172a 70%, #090d16 100%)',
+        background: 'radial-gradient(circle at 50% 40%, #1e293b 0%, #0f172a 70%, #090d16 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -55,17 +55,16 @@ export default function SplashScreen({ onFinish }) {
         }}
       />
 
-      {/* 3D App Icon Container */}
+      {/* App Icon */}
       <div
         style={{
           position: 'relative',
           width: '100px',
           height: '100px',
           borderRadius: '30px',
-          background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #7c3aed 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
           boxShadow: `
             0 20px 40px -10px rgba(14, 165, 233, 0.6),
-            0 10px 20px -5px rgba(124, 58, 237, 0.5),
             inset 0 2px 3px rgba(255, 255, 255, 0.4),
             inset 0 -4px 6px rgba(0, 0, 0, 0.3)
           `,

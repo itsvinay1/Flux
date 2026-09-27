@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Trophy, Zap, Play, BarChart2, Sparkles, Sun, Moon, Map, Share2, Plus, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { Flame, Trophy, Zap, Play, BarChart2, Sparkles, Sun, Moon, Map, Share2, Plus, CheckSquare, Square, Trash2, Bot } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -48,7 +48,7 @@ function UserHeader({ onNavigate, onShare }) {
         <div style={{
           width: 46, height: 46,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+          background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: '#fff', fontWeight: 800, fontSize: '20px',
           boxShadow: '0 4px 14px rgba(14,165,233,0.3)',
@@ -132,12 +132,12 @@ function AICoachCard() {
   };
 
   return (
-    <div className="card card-violet mb-16" style={{ padding: '24px' }}>
+    <div className="card card-dark mb-16" style={{ padding: '24px' }}>
       {/* Decorative blur blob */}
       <div style={{
         position: 'absolute', top: 0, right: 0,
         width: 160, height: 160,
-        background: 'rgba(255,255,255,0.12)',
+        background: 'rgba(14,165,233,0.08)',
         borderRadius: '50%',
         filter: 'blur(40px)',
         transform: 'translate(30%, -30%)',
@@ -145,8 +145,8 @@ function AICoachCard() {
       }} />
 
       <div className="flex items-center justify-between mb-16" style={{ position: 'relative', zIndex: 1 }}>
-        <h3 style={{ fontWeight: 700, fontSize: '17px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={18} style={{ color: '#fde68a' }} />
+        <h3 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Bot size={17} style={{ color: '#38bdf8' }} />
           AI Coach
         </h3>
         <button
@@ -154,14 +154,13 @@ function AICoachCard() {
           onClick={handleHype}
           disabled={loading}
           style={{
-            background: 'rgba(255,255,255,0.18)',
-            border: '1px solid rgba(255,255,255,0.25)',
-            backdropFilter: 'blur(8px)',
-            color: '#fff',
-            fontSize: '13px',
+            background: 'rgba(14,165,233,0.15)',
+            border: '1px solid rgba(14,165,233,0.25)',
+            color: '#38bdf8',
+            fontSize: '12px',
             fontWeight: 700,
-            padding: '8px 18px',
-            borderRadius: '99px',
+            padding: '8px 16px',
+            borderRadius: '12px',
             cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px',
             fontFamily: 'Outfit, sans-serif',
@@ -175,7 +174,7 @@ function AICoachCard() {
               <span className="thinking-dot" />
               <span className="thinking-dot" />
             </span>
-          ) : '✨ Hype Me Up'}
+          ) : 'Motivate Me'}
         </button>
       </div>
 
@@ -185,8 +184,8 @@ function AICoachCard() {
             {message}
           </div>
         ) : (
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '14px', lineHeight: 1.6, fontWeight: 500 }}>
-            Tap the button for a personalized, aggressive boost based on your stats!
+          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px', lineHeight: 1.6, fontWeight: 500 }}>
+            Get a personalized boost based on your streak and stats.
           </p>
         )}
       </div>
@@ -295,7 +294,7 @@ function ChallengeCard({ onNavigate, onCreateGoal }) {
                   onClick={() => selectChallenge(c.id)}
                   style={{
                     padding: '6px 14px',
-                    borderRadius: '99px',
+                    borderRadius: '12px',
                     fontSize: '12px',
                     fontWeight: 700,
                     border: 'none',
@@ -316,7 +315,7 @@ function ChallengeCard({ onNavigate, onCreateGoal }) {
             onClick={onCreateGoal}
             style={{
               padding: '6px 12px',
-              borderRadius: '99px',
+              borderRadius: '12px',
               fontSize: '11px',
               fontWeight: 800,
               border: '1px solid rgba(255,255,255,0.3)',

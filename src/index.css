@@ -1,6 +1,5 @@
 /* ===================================================
-   FLUX — Light "Soft UI" Design System
-   Inspired by clean iOS-style aesthetics
+   FLUX - Clean, No-Nonsense Design System
    =================================================== */
 
 /* --- CSS Variables / Design Tokens --- */
@@ -14,19 +13,16 @@
   --glass-border: #E2E8F0;
   --glass-border-bright: #CBD5E1;
 
-  --grad-primary: linear-gradient(135deg, #7c3aed, #d946ef);
-  --grad-sky: linear-gradient(135deg, #0ea5e9, #6366f1);
+  --grad-sky: linear-gradient(135deg, #0ea5e9, #3b82f6);
   --grad-fire: linear-gradient(135deg, #f97316, #ef4444);
   --grad-success: linear-gradient(135deg, #10b981, #0ea5e9);
-  --grad-journal: linear-gradient(135deg, #6366f1, #0ea5e9);
+  --grad-journal: linear-gradient(135deg, #3b82f6, #0ea5e9);
   --grad-dark: linear-gradient(135deg, #1e293b, #0f172a);
 
-  --accent-violet: #7c3aed;
   --accent-sky: #0ea5e9;
-  --accent-indigo: #6366f1;
+  --accent-blue: #3b82f6;
   --accent-amber: #f59e0b;
   --accent-emerald: #10b981;
-  --accent-pink: #d946ef;
   --accent-orange: #f97316;
   --accent-rose: #f43f5e;
 
@@ -34,16 +30,14 @@
   --text-secondary: #64748b;
   --text-muted: #94a3b8;
 
-  --radius-sm: 14px;
-  --radius-md: 20px;
-  --radius-lg: 28px;
-  --radius-xl: 32px;
-  --radius-full: 9999px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
 
-  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.04);
-  --shadow-card-md: 0 12px 40px rgba(0, 0, 0, 0.08);
-  --shadow-button-sky: 0 8px 24px rgba(14, 165, 233, 0.35);
-  --shadow-button-violet: 0 8px 24px rgba(124, 58, 237, 0.35);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-card-md: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-button-sky: 0 6px 18px rgba(14, 165, 233, 0.30);
 
   --nav-height: 84px;
   --status-bar-height: env(safe-area-inset-top, 0px);
@@ -167,7 +161,20 @@ body {
   width: 100%;
   margin: 0 auto;
   overflow: hidden;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
+  /* Ensures the app background fills under the notch */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Status Bar Shield: prevents scrolled content from bleeding into the camera notch / status bar */
+.status-bar-shield {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: max(16px, env(safe-area-inset-top, 0px));
+  background: var(--bg-primary);
+  z-index: 50;
+  pointer-events: none;
 }
 
 /* Light gradient glow at top */
@@ -192,11 +199,15 @@ body {
   position: relative;
   z-index: 1;
   padding-bottom: calc(var(--nav-height) + 12px + var(--bottom-safe));
-  padding-top: max(12px, env(safe-area-inset-top));
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: calc(var(--nav-height) + 12px);
+}
+
+/* Lock background scroll when any modal/sheet is open */
+.tab-content.modal-open {
+  overflow: hidden;
 }
 
 .tab-page {
@@ -283,14 +294,14 @@ body.dark-theme .page-header {
 
 /* --- Gradient Cards --- */
 .card-violet {
-  background: linear-gradient(135deg, #7c3aed, #d946ef);
-  border: none;
-  box-shadow: 0 12px 40px rgba(124,58,237,0.35);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   color: #fff;
 }
 
 .card-sky {
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
   border: none;
   box-shadow: 0 12px 40px rgba(14,165,233,0.3);
   color: #fff;
@@ -328,7 +339,7 @@ body.dark-theme .page-header {
   font-weight: 700;
   font-size: 15px;
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: 16px;
   cursor: pointer;
   transition: all var(--transition-normal);
   text-decoration: none;
@@ -337,7 +348,7 @@ body.dark-theme .page-header {
   -webkit-tap-highlight-color: transparent;
 }
 
-.btn:active { transform: scale(0.95); }
+.btn:active { transform: scale(0.96); }
 
 .btn-primary {
   background: var(--accent-sky);
@@ -346,13 +357,13 @@ body.dark-theme .page-header {
   box-shadow: var(--shadow-button-sky);
 }
 
-.btn-primary:hover { box-shadow: 0 10px 32px rgba(14,165,233,0.5); }
+.btn-primary:hover { box-shadow: 0 8px 28px rgba(14,165,233,0.45); }
 
 .btn-dark {
   background: #0f172a;
   color: #fff;
   padding: 14px 28px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
 .btn-sm {
@@ -385,7 +396,7 @@ body.dark-theme .page-header {
   backdrop-filter: blur(8px);
 }
 
-.btn-white-glass:active { transform: scale(0.95); }
+.btn-white-glass:active { transform: scale(0.96); }
 
 /* --- Badges --- */
 .badge {
@@ -393,7 +404,7 @@ body.dark-theme .page-header {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: 8px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -401,11 +412,12 @@ body.dark-theme .page-header {
 }
 
 .badge-sky { background: #e0f2fe; color: #0284c7; }
-.badge-violet { background: #ede9fe; color: #7c3aed; }
+.badge-violet { background: #f1f5f9; color: #475569; }
 .badge-amber { background: #fef3c7; color: #d97706; }
 .badge-emerald { background: #d1fae5; color: #059669; }
 .badge-slate { background: #f1f5f9; color: #64748b; }
 .badge-white { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); }
+.badge-primary { background: #e0f2fe; color: #0284c7; }
 
 /* --- Progress Bar --- */
 .progress-bar-track {
@@ -425,7 +437,7 @@ body.dark-theme .page-header {
 .progress-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  background: linear-gradient(90deg, #38bdf8, #0284c7);
   transition: width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 0 12px rgba(56,189,248,0.5);
 }
@@ -555,7 +567,7 @@ body.dark-theme .page-header {
 }
 
 .nav-item.active .nav-icon-wrap {
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
   color: #ffffff;
   box-shadow: 
     0 8px 20px rgba(14, 165, 233, 0.45),
@@ -572,21 +584,21 @@ body.dark-theme .page-header {
 
 /* --- AI Response Box --- */
 .ai-response {
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: var(--radius-md);
   padding: 16px;
   margin-top: 14px;
   font-size: 14px;
   line-height: 1.65;
-  color: #3730a3;
+  color: #334155;
   font-weight: 500;
   animation: fadeInUp 0.4s ease;
 }
 
 .ai-response-dark {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: var(--radius-md);
   padding: 14px;
   margin-top: 12px;
@@ -656,7 +668,7 @@ body.dark-theme .page-header {
 
 .toast {
   background: #0f172a;
-  border-radius: var(--radius-full);
+  border-radius: 14px;
   padding: 12px 20px;
   font-size: 14px;
   font-weight: 600;
@@ -665,7 +677,7 @@ body.dark-theme .page-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 
 @keyframes toastIn {
@@ -734,14 +746,14 @@ body.dark-theme .page-header {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #fff;
+  background: var(--bg-card);
   border-bottom: 1px solid var(--glass-border);
   cursor: pointer;
   transition: background var(--transition-fast);
 }
 
 .settings-row:last-child { border-bottom: none; }
-.settings-row:active { background: #f8fafc; }
+.settings-row:active { background: var(--bg-card-hover); }
 
 /* --- Timeline --- */
 .timeline-dot-complete {

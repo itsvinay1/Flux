@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, RotateCcw, Plus, CheckCircle, Lock, Settings2, Volume2, CloudRain, Zap, Radio, Music, Upload } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Play, Pause, RotateCcw, Plus, CheckCircle, Lock, Settings2, Volume2, CloudRain, Zap, Radio, Music, Upload, Trophy } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
 import { audioEngine } from '../utils/ambientAudio';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 const MODES = [
   { id: 'pomodoro', label: 'Pomodoro', minutes: 25 },
@@ -123,7 +125,7 @@ function CircularTimer({ progress, seconds, isRunning }) {
           </div>
         </div>
 
-        {/* Status Pill */}
+        {/* Status Badge */}
         <div style={{
           marginTop: '16px',
           fontSize: '11px',
@@ -131,12 +133,12 @@ function CircularTimer({ progress, seconds, isRunning }) {
           textTransform: 'uppercase',
           letterSpacing: '2px',
           padding: '5px 14px',
-          borderRadius: '99px',
+          borderRadius: '6px',
           background: isRunning ? 'rgba(14, 165, 233, 0.12)' : 'var(--bg-secondary)',
           color: isRunning ? 'var(--accent-sky)' : 'var(--text-muted)',
           transition: 'all 0.3s ease',
         }}>
-          {isRunning ? '⚡ Flow State Active' : '⏸️ Session Paused'}
+          {isRunning ? 'Active Focus' : 'Paused'}
         </div>
       </div>
 
@@ -171,6 +173,15 @@ export default function FocusTimer() {
   const customAudioRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    if (showCustomModal) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+    return () => unlockScroll();
+  }, [showCustomModal]);
+
   const handleCustomAudioUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -178,9 +189,9 @@ export default function FocusTimer() {
       const url = URL.createObjectURL(file);
       setCustomTrack({ url, name: file.name });
       setActiveSound('custom');
-      showToast(`Loaded "${file.name}" 🎵`, '🎧');
+      showToast(`Loaded "${file.name}"`, 'check');
     } catch (err) {
-      showToast('Could not load audio file', '❌');
+      showToast('Could not load audio file', 'alert');
     }
   };
 
@@ -209,7 +220,7 @@ export default function FocusTimer() {
     const totalSec = (d * 86400) + (h * 3600) + (m * 60);
 
     if (totalSec <= 0) {
-      showToast('Please set at least 1 minute! ⏱️', '⚠️');
+      showToast('Please set at least 1 minute', 'alert');
       return;
     }
 
@@ -223,7 +234,7 @@ export default function FocusTimer() {
     resetDistraction();
     setShowCustomModal(false);
 
-    showToast(`Comfy timer set to ${label}! ⏱️`, '✨');
+    showToast(`Timer set to ${label}`, 'check');
   };
 
   const handleComplete = useCallback(() => {
@@ -233,7 +244,7 @@ export default function FocusTimer() {
       if (customAudioRef.current) customAudioRef.current.pause();
       const minsCompleted = Math.max(1, Math.round(totalSeconds / 60));
       addFocusSession(minsCompleted, currentDistractions);
-      showToast(`Session complete! +${minsCompleted} pts earned 🎉`, '🏆');
+      showToast(`Session complete! +${minsCompleted} points earned`, 'success');
     } catch (err) {
       console.warn('[FocusTimer] Completion notice:', err);
     }
@@ -263,7 +274,7 @@ export default function FocusTimer() {
 
   const handleDistraction = () => {
     incrementDistraction();
-    showToast('Urge logged. Stay strong! 💪', '⚡');
+    showToast('Urge logged. Stay focused.', 'info');
   };
 
   const [volume, setVolume] = useState(0.8);
@@ -369,12 +380,12 @@ export default function FocusTimer() {
           style={{
             flex: 1, minWidth: '85px', padding: '10px 6px',
             fontSize: '12px', fontWeight: 700,
-            background: selectedMode === 3 ? 'var(--accent-violet)' : 'var(--bg-card)',
-            border: `1.5px solid ${selectedMode === 3 ? 'var(--accent-violet)' : 'var(--glass-border)'}`,
-            borderRadius: '16px',
+            background: selectedMode === 3 ? 'var(--accent-sky)' : 'var(--bg-card)',
+            border: `1.5px solid ${selectedMode === 3 ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
+            borderRadius: '14px',
             color: selectedMode === 3 ? '#fff' : 'var(--text-secondary)',
             cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-            boxShadow: selectedMode === 3 ? 'var(--shadow-button-violet)' : 'var(--shadow-card)',
+            boxShadow: selectedMode === 3 ? 'var(--shadow-button-sky)' : 'var(--shadow-card)',
             transition: 'all 0.2s ease', lineHeight: 1.4,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           }}
@@ -389,19 +400,32 @@ export default function FocusTimer() {
       </div>
 
       {/* Custom Time Modal */}
-      {showCustomModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 999,
-          background: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
-        }}>
-          <div style={{
-            background: 'var(--bg-card)', borderRadius: '28px', padding: '28px',
-            width: '100%', maxWidth: '380px', boxShadow: 'var(--shadow-card-md)',
-            animation: 'slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-          }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)' }}>
-              Set Custom Comfy Duration
+      {showCustomModal && createPortal(
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 9999,
+            background: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+            overscrollBehavior: 'none',
+            touchAction: 'none',
+          }}
+          onClick={() => setShowCustomModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card)', borderRadius: '24px', padding: '28px 24px',
+              width: '100%', maxWidth: '380px', boxShadow: 'var(--shadow-card-md)',
+              animation: 'slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+              touchAction: 'pan-y',
+              border: '1px solid var(--glass-border)',
+            }}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', color: 'var(--text-primary)' }}>
+              Set Custom Duration
             </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '24px' }}>
@@ -441,20 +465,21 @@ export default function FocusTimer() {
               <button
                 onClick={() => setShowCustomModal(false)}
                 className="btn btn-ghost flex-1"
-                style={{ borderRadius: '16px' }}
+                style={{ borderRadius: '14px' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleApplyCustomTime}
                 className="btn btn-primary flex-1"
-                style={{ borderRadius: '16px' }}
+                style={{ borderRadius: '14px' }}
               >
                 Apply Timer
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Large Comfy Timer Ring */}
@@ -539,7 +564,7 @@ export default function FocusTimer() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
             <Volume2 size={16} color="var(--accent-sky)" /> Ambient Focus &amp; Meditation Audio
           </div>
-          <span style={{ fontSize: '10px', background: 'rgba(14,165,233,0.1)', color: '#0284c7', padding: '3px 8px', borderRadius: 99, fontWeight: 700 }}>
+          <span style={{ fontSize: '10px', background: 'rgba(14,165,233,0.1)', color: '#0284c7', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
             100% Offline
           </span>
         </div>
@@ -564,12 +589,12 @@ export default function FocusTimer() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
           {[
             { id: 'off', label: 'Off', icon: <Volume2 size={13} /> },
-            { id: 'meditation', label: '🧘 Om', icon: <Zap size={13} /> },
-            { id: 'study', label: '📖 Study', icon: <Zap size={13} /> },
-            { id: 'flute', label: '🪈 Flute', icon: <Radio size={13} /> },
-            { id: 'lofi', label: '☕ Lo-Fi', icon: <Zap size={13} /> },
-            { id: 'rain', label: '🌧️ Rain', icon: <CloudRain size={13} /> },
-            { id: 'custom', label: '📁 My Audio', icon: <Music size={13} /> },
+            { id: 'meditation', label: 'Om', icon: <Zap size={13} /> },
+            { id: 'study', label: 'Study', icon: <Zap size={13} /> },
+            { id: 'flute', label: 'Flute', icon: <Radio size={13} /> },
+            { id: 'lofi', label: 'Lo-Fi', icon: <Zap size={13} /> },
+            { id: 'rain', label: 'Rain', icon: <CloudRain size={13} /> },
+            { id: 'custom', label: 'My Audio', icon: <Music size={13} /> },
           ].map((snd) => {
             const isActive = activeSound === snd.id;
             return (
@@ -597,7 +622,7 @@ export default function FocusTimer() {
                     }
                   }
                   if (snd.id !== 'off') {
-                    showToast(isRunning ? `Playing ${snd.label} 🎧` : `Selected ${snd.label} 🎧`, '🎵');
+                    showToast(isRunning ? `Playing ${snd.label}` : `Selected ${snd.label}`, 'info');
                   }
                 }}
                 style={{
@@ -641,7 +666,7 @@ export default function FocusTimer() {
                 border: 'none', cursor: 'pointer', flexShrink: 0,
               }}
             >
-              {customTrack ? 'Change 📁' : 'Choose File 📁'}
+              {customTrack ? 'Change' : 'Choose File'}
             </button>
           </div>
         )}
@@ -650,11 +675,13 @@ export default function FocusTimer() {
       {/* Session Complete Card */}
       {sessionComplete && (
         <div className="card card-emerald-tint text-center mt-16" style={{ width: '100%' }}>
-          <div style={{ fontSize: '40px', marginBottom: '8px' }}>🏆</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+            <Trophy size={42} color="var(--accent-sky)" />
+          </div>
           <div style={{ fontWeight: 800, fontSize: '20px', color: 'var(--text-primary)', marginBottom: '6px' }}>Session Complete!</div>
           <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', fontWeight: 500 }}>
             <strong style={{ color: '#059669' }}>+{Math.round(totalSeconds/60)} pts</strong> earned •{' '}
-            {currentDistractions === 0 ? '🎯 Perfect focus!' : `${currentDistractions} distractions logged`}
+            {currentDistractions === 0 ? 'Zero distractions logged' : `${currentDistractions} distractions logged`}
           </div>
           <button
             id="btn-new-session"

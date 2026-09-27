@@ -269,8 +269,10 @@ export default function AuthModal({ onComplete }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 1000,
+      background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px', overflowY: 'auto',
     }}>
@@ -278,28 +280,28 @@ export default function AuthModal({ onComplete }) {
         width: '100%', maxWidth: '420px',
         background: 'rgba(30, 41, 59, 0.88)',
         backdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255, 255, 255, 0.16)',
-        borderRadius: '32px', padding: '36px 28px',
-        color: '#fff', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '28px', padding: '32px 24px',
+        color: '#fff', boxShadow: '0 20px 60px -12px rgba(0, 0, 0, 0.6)',
         textAlign: 'center', animation: 'fadeInUp 0.35s ease',
       }}>
-        {/* App 3D Logo Header */}
+        {/* App Logo */}
         <div style={{
-          width: 72, height: 72, borderRadius: '24px', margin: '0 auto 16px',
-          background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #7c3aed 100%)',
+          width: 68, height: 68, borderRadius: '22px', margin: '0 auto 16px',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '40px', color: '#fff', fontWeight: 900,
-          boxShadow: '0 12px 30px -5px rgba(14, 165, 233, 0.5), inset 0 2px 3px rgba(255,255,255,0.4)',
+          fontSize: '38px', color: '#fff', fontWeight: 900,
+          boxShadow: '0 10px 28px -5px rgba(14, 165, 233, 0.45)',
           letterSpacing: '-1px', userSelect: 'none',
         }}>
           F
         </div>
 
-        <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '6px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '6px' }}>
           Welcome to FLUX
         </h1>
         <p style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 500, lineHeight: 1.5, marginBottom: '24px' }}>
-          Master deep focus, track your syllabus, and achieve your goals with Cloud Sync.
+          Master deep focus, track your syllabus, and achieve your goals.
         </p>
 
         {/* Auth Method Navigation Tabs */}
@@ -472,7 +474,7 @@ export default function AuthModal({ onComplete }) {
               </div>
               {emailMode === 'signup' && (
                 <p style={{ fontSize: '11px', color: '#38bdf8', marginTop: '6px', fontWeight: 600, lineHeight: 1.4 }}>
-                  🛡️ <b>Note:</b> Only official <b>@gmail.com</b> email addresses are allowed for registration to prevent anonymous temporary accounts.
+                  Only <b>@gmail.com</b> addresses are accepted. Temporary or disposable email domains are not permitted.
                 </p>
               )}
             </div>
@@ -503,11 +505,11 @@ export default function AuthModal({ onComplete }) {
               disabled={loading}
               style={{
                 width: '100%', padding: '14px', borderRadius: '16px',
-                background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+                background: '#0ea5e9',
                 color: '#fff', border: 'none', fontWeight: 800, fontSize: '14px',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                boxShadow: '0 10px 25px -5px rgba(14, 165, 233, 0.4)',
+                boxShadow: '0 8px 22px -4px rgba(14, 165, 233, 0.4)',
                 transition: 'all 0.2s ease', fontFamily: 'Outfit, sans-serif',
                 opacity: loading ? 0.7 : 1,
               }}
@@ -515,9 +517,9 @@ export default function AuthModal({ onComplete }) {
               {loading ? (
                 <span>Authenticating ({timeLeft}s)...</span>
               ) : emailMode === 'login' ? (
-                <span>Sign In to FLUX ⚡</span>
+                <span>Sign In</span>
               ) : (
-                <span>Create Account 🚀</span>
+                <span>Create Account</span>
               )}
             </button>
           </form>
@@ -533,16 +535,15 @@ export default function AuthModal({ onComplete }) {
             <button
               onClick={handleGuestSignIn}
               style={{
-                width: '100%', padding: '15px', borderRadius: '18px',
-                background: 'rgba(255, 255, 255, 0.1)', color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                fontWeight: 800, fontSize: '15px', cursor: 'pointer',
+                width: '100%', padding: '14px', borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.08)', color: '#fff',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                fontWeight: 700, fontSize: '14px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 transition: 'all 0.2s ease', fontFamily: 'Outfit, sans-serif',
               }}
             >
-              <Sparkles size={18} color="#0ea5e9" />
-              <span>Continue as Guest ⚡</span>
+              <span>Continue as Guest</span>
             </button>
           </div>
         )}

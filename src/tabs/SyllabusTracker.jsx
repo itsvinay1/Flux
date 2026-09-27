@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   BookOpen, CheckSquare, Square, Plus, Trash2, Edit3, ChevronDown, 
   ChevronRight, MoreVertical, X, Folder, AlertTriangle, Check
 } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 export default function SyllabusTracker() {
   const courses = useStore((s) => s.courses) || [];
@@ -44,6 +46,15 @@ export default function SyllabusTracker() {
   // Modern Action Sheet state
   const [actionSheet, setActionSheet] = useState(null); // { title, subtitle, actions: [{ label, icon, onClick, danger }] }
 
+  useEffect(() => {
+    if (modalType || actionSheet) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+    return () => unlockScroll();
+  }, [modalType, actionSheet]);
+
   const currentCourse = courses.find((c) => c.id === activeCourseId) || courses[0];
   const activeSubjects = currentCourse?.subjects || [];
   const currentSubject = activeSubjects.find((s) => s.id === activeSubjectId) || activeSubjects[0];
@@ -77,19 +88,19 @@ export default function SyllabusTracker() {
 
     if (modalType === 'addCourse') {
       addCourse(inputTitle.trim(), 'General', inputIcon || '📚');
-      showToast('Course created! 🚀', '✨');
+      showToast('Course created', 'check');
     } else if (modalType === 'addSubject') {
       addSubject(currentCourse.id, inputTitle.trim(), inputIcon || '📘');
-      showToast('Subject added! 📚', '✨');
+      showToast('Subject added', 'check');
     } else if (modalType === 'addChapter') {
       addChapter(currentCourse.id, modalData.subjectId, inputTitle.trim());
-      showToast('Chapter added! 📖', '✨');
+      showToast('Chapter added', 'check');
     } else if (modalType === 'addTopic') {
       addTopic(currentCourse.id, modalData.subjectId, modalData.chapterId, inputTitle.trim());
-      showToast('Topic added! 📝', '✨');
+      showToast('Topic added', 'check');
     } else if (modalType === 'addSubTopic') {
       addSubTopic(currentCourse.id, modalData.subjectId, modalData.chapterId, modalData.topicId, inputTitle.trim());
-      showToast('Sub-topic added! ✅', '✨');
+      showToast('Sub-topic added', 'check');
     } else if (modalType === 'editItem') {
       const { level, courseId, subjectId, chapterId, topicId, subTopicId } = modalData;
       if (level === 'course') editCourse(courseId, { title: inputTitle.trim(), icon: inputIcon || '📚' });
@@ -97,7 +108,7 @@ export default function SyllabusTracker() {
       else if (level === 'chapter') editChapter(courseId, subjectId, chapterId, { title: inputTitle.trim() });
       else if (level === 'topic') editTopic(courseId, subjectId, chapterId, topicId, { title: inputTitle.trim() });
       else if (level === 'subTopic') editSubTopic(courseId, subjectId, chapterId, topicId, subTopicId, { title: inputTitle.trim() });
-      showToast('Updated successfully ✨', '✏️');
+      showToast('Updated successfully', 'check');
     }
 
     setModalType(null);
@@ -289,7 +300,7 @@ export default function SyllabusTracker() {
               key={c.id}
               onClick={() => { setActiveCourseId(c.id); setActiveSubjectId(''); }}
               style={{
-                padding: '7px 14px', borderRadius: '99px', fontSize: '12px', fontWeight: 700,
+                padding: '7px 14px', borderRadius: '12px', fontSize: '12px', fontWeight: 700,
                 background: isSel ? 'var(--accent-sky)' : 'var(--bg-card)',
                 border: `1.5px solid ${isSel ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
                 color: isSel ? '#fff' : 'var(--text-secondary)',
@@ -316,7 +327,7 @@ export default function SyllabusTracker() {
                 onClick={() => setActiveSubjectId(sub.id)}
                 style={{
                   minWidth: '135px', padding: '12px 14px', borderRadius: '16px',
-                  background: isSel ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'var(--bg-card)',
+                  background: isSel ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' : 'var(--bg-card)',
                   color: isSel ? '#fff' : 'var(--text-secondary)',
                   border: `1.5px solid ${isSel ? '#0ea5e9' : 'var(--glass-border)'}`,
                   cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
@@ -404,11 +415,11 @@ export default function SyllabusTracker() {
             </div>
           </div>
 
-          <div style={{ height: '6px', width: '100%', background: 'var(--bg-secondary)', borderRadius: '99px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', width: '100%', background: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{
               height: '100%', width: `${currentSubjectMetrics.percent}%`,
-              background: 'linear-gradient(90deg, #0ea5e9 0%, #6366f1 100%)',
-              borderRadius: '99px', transition: 'width 0.4s ease',
+              background: 'linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%)',
+              borderRadius: '4px', transition: 'width 0.4s ease',
             }} />
           </div>
         </div>
@@ -578,22 +589,33 @@ export default function SyllabusTracker() {
       )}
 
       {/* ── Modern Bottom Action Sheet Modal ── */}
-      {actionSheet && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 999,
-          background: 'rgba(10, 16, 30, 0.65)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        }} onClick={() => setActionSheet(null)}>
+      {actionSheet && createPortal(
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 9999,
+            background: 'rgba(10, 16, 30, 0.65)', backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            overscrollBehavior: 'none',
+            touchAction: 'none',
+          }}
+          onClick={() => setActionSheet(null)}
+        >
           <div
             onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             style={{
               background: 'var(--bg-card)', borderRadius: '24px 24px 0 0',
-              width: '100%', maxWidth: '480px', padding: '20px 24px 36px',
+              width: '100%', maxWidth: '480px',
+              padding: '20px 24px calc(36px + env(safe-area-inset-bottom, 16px))',
               boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
               animation: 'slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              touchAction: 'pan-y',
+              borderTop: '1px solid var(--glass-border)',
             }}
           >
-            <div style={{ width: 36, height: 4, background: 'var(--glass-border)', borderRadius: 99, margin: '0 auto 16px' }} />
+            <div style={{ width: 36, height: 4, background: 'var(--glass-border)', borderRadius: 4, margin: '0 auto 16px' }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-primary)' }}>
@@ -605,7 +627,7 @@ export default function SyllabusTracker() {
                   </div>
                 )}
               </div>
-              <button onClick={() => setActionSheet(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <button onClick={() => setActionSheet(null)} aria-label="Close" style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={18} />
               </button>
             </div>
@@ -634,21 +656,35 @@ export default function SyllabusTracker() {
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── CRUD Modals (Add / Edit / Delete Confirmation) ── */}
-      {modalType && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 1000,
-          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
-        }}>
-          <div style={{
-            width: '100%', maxWidth: '360px', background: 'var(--bg-card)',
-            borderRadius: '24px', padding: '24px', border: '1px solid var(--glass-border)',
-            boxShadow: 'var(--shadow-card-md)', textAlign: 'center',
-          }}>
+      {modalType && createPortal(
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+            overscrollBehavior: 'none',
+            touchAction: 'none',
+          }}
+          onClick={() => setModalType(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: '360px', background: 'var(--bg-card)',
+              borderRadius: '24px', padding: '24px', border: '1px solid var(--glass-border)',
+              boxShadow: 'var(--shadow-card-md)', textAlign: 'center',
+              touchAction: 'pan-y',
+              animation: 'fadeInUp 0.25s ease',
+            }}
+          >
             {modalType === 'deleteConfirm' ? (
               <div>
                 <AlertTriangle size={36} color="#ef4444" style={{ margin: '0 auto 12px' }} />
@@ -681,7 +717,7 @@ export default function SyllabusTracker() {
                 {modalType === 'addCourse' || modalType === 'addSubject' ? (
                   <input
                     type="text"
-                    placeholder="Icon Emoji (e.g. 💻)"
+                    placeholder="Icon (e.g. 📘)"
                     value={inputIcon}
                     onChange={(e) => setInputIcon(e.target.value)}
                     maxLength={4}
@@ -714,7 +750,8 @@ export default function SyllabusTracker() {
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

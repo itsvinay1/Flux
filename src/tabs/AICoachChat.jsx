@@ -5,7 +5,7 @@ import { callGemini } from '../mockAI';
 import { cachedAICall } from '../ai/aiCache';
 import { showToast } from '../components/Toast';
 
-const SYSTEM_PROMPT = `You are FLUX AI — an elite productivity, focus, and habit coach (inspired by James Clear's Atomic Habits & Marcus Aurelius's Stoicism). 
+const SYSTEM_PROMPT = `You are FLUX AI - an elite productivity, focus, and habit coach (inspired by James Clear's Atomic Habits & Marcus Aurelius's Stoicism). 
 Keep responses direct, highly actionable, empathetic, and aggressive against excuses. Maximum 3 sentences per response. No fluffy markdown headings.`;
 
 export default function AICoachChat() {
@@ -70,7 +70,7 @@ export default function AICoachChat() {
       (ctx) => {
         // High quality local fallbacks when rate limited or offline
         const fallbacks = [
-          "Focus on the immediate next action. Don't worry about the entire mountain—just take the first step right now.",
+          "Focus on the immediate next action. Don't worry about the entire mountain, just take the first step right now.",
           "Consistency beats intensity every single time. Protect your streak today no matter how small the win.",
           "Your mind seeks comfort, but growth lies in pushing past that initial friction. Get back to your focus block!",
         ];
@@ -94,13 +94,13 @@ export default function AICoachChat() {
       {/* Header */}
       <div className="page-header" style={{ paddingBottom: '12px', borderBottom: '1px solid var(--glass-border)', marginBottom: '16px' }}>
         <div>
-          <h1 className="page-title" style={{ fontSize: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles color="var(--accent-violet)" size={24} /> AI Coach
+          <h1 className="page-title" style={{ fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Bot color="var(--accent-sky)" size={22} /> AI Coach
           </h1>
-          <p className="page-subtitle">Personalized accountability & mindset advice</p>
+          <p className="page-subtitle">Accountability and mindset guidance</p>
         </div>
-        <span className="badge badge-violet" style={{ alignSelf: 'center' }}>
-          <Zap size={12} /> 24/7 Active
+        <span className="badge badge-primary" style={{ alignSelf: 'center' }}>
+          <Zap size={12} /> Active
         </span>
       </div>
 
@@ -120,9 +120,10 @@ export default function AICoachChat() {
               {isAI && (
                 <div style={{
                   width: 36, height: 36, borderRadius: '14px',
-                  background: 'linear-gradient(135deg, #7c3aed, #d946ef)',
+                  background: 'linear-gradient(135deg, #1e293b, #0f172a)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', flexShrink: 0, boxShadow: '0 4px 12px rgba(124,58,237,0.3)',
+                  color: '#38bdf8', flexShrink: 0,
+                  border: '1px solid rgba(56,189,248,0.2)',
                 }}>
                   <Bot size={20} />
                 </div>
@@ -132,10 +133,10 @@ export default function AICoachChat() {
                 background: isAI ? 'var(--bg-card)' : 'var(--accent-sky)',
                 color: isAI ? 'var(--text-primary)' : '#fff',
                 border: isAI ? '1px solid var(--glass-border)' : 'none',
-                padding: '14px 18px', borderRadius: '22px',
-                borderBottomLeftRadius: isAI ? '4px' : '22px',
-                borderBottomRightRadius: !isAI ? '4px' : '22px',
-                boxShadow: isAI ? 'var(--shadow-card)' : '0 6px 20px rgba(14,165,233,0.3)',
+                padding: '14px 18px', borderRadius: '18px',
+                borderBottomLeftRadius: isAI ? '4px' : '18px',
+                borderBottomRightRadius: !isAI ? '4px' : '18px',
+                boxShadow: isAI ? 'var(--shadow-card)' : '0 4px 16px rgba(14,165,233,0.25)',
                 fontSize: '14px', lineHeight: 1.6, fontWeight: 500,
               }}>
                 <div>{m.text}</div>
@@ -154,19 +155,21 @@ export default function AICoachChat() {
           <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start' }}>
             <div style={{
               width: 36, height: 36, borderRadius: '14px',
-              background: 'linear-gradient(135deg, #7c3aed, #d946ef)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+              background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#38bdf8',
+              border: '1px solid rgba(56,189,248,0.2)',
             }}>
               <Bot size={20} />
             </div>
             <div style={{
               background: 'var(--bg-card)', border: '1px solid var(--glass-border)',
-              padding: '14px 18px', borderRadius: '22px', borderBottomLeftRadius: '4px',
+              padding: '14px 18px', borderRadius: '18px', borderBottomLeftRadius: '4px',
               display: 'flex', alignItems: 'center', gap: '4px',
             }}>
-              <span className="thinking-dot" style={{ background: 'var(--accent-violet)' }} />
-              <span className="thinking-dot" style={{ background: 'var(--accent-violet)' }} />
-              <span className="thinking-dot" style={{ background: 'var(--accent-violet)' }} />
+              <span className="thinking-dot" style={{ background: 'var(--accent-sky)' }} />
+              <span className="thinking-dot" style={{ background: 'var(--accent-sky)' }} />
+              <span className="thinking-dot" style={{ background: 'var(--accent-sky)' }} />
             </div>
           </div>
         )}

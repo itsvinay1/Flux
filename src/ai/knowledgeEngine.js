@@ -46,7 +46,7 @@ const KNOWLEDGE_BASE = [
     topic: 'exam_prep',
     keywords: ['gate', 'jee', 'neet', 'upsc', 'revision', 'pyq', 'mock test', 'marks', 'rank', 'syllabus', 'exam'],
     answers: [
-      "The key to competitive exams isn't just studying — it's Mock Test Error Logs. Maintain an Error Notebook categorizing mistakes into: Conceptual, Calculation, or Misreading.",
+      "The key to competitive exams isn't just studying - it's Mock Test Error Logs. Maintain an Error Notebook categorizing mistakes into: Conceptual, Calculation, or Misreading.",
       "Prioritize Previous Year Questions (PYQs) from the last 15 years. Treat every PYQ option as a conceptual topic to master.",
       "Implement the 3-Pass Exam Strategy: Pass 1 (Easy/Instant Qs), Pass 2 (Medium calculation Qs), Pass 3 (Challenging/Time-consuming Qs)."
     ]
@@ -58,7 +58,7 @@ const KNOWLEDGE_BASE = [
     keywords: ['focus', 'distraction', 'procrastin', 'habit', 'streak', 'routine', 'pomodoro', 'atomic habits', 'burnout', 'motivation'],
     answers: [
       "Action precedes motivation. Use James Clear's 2-Minute Rule: commit to starting for just 120 seconds. Once momentum starts, focus flows naturally.",
-      "Protect your peak cognitive window (usually early morning). Reserve it for deep, unstructured problem solving — no phone, no notifications, pure flow.",
+      "Protect your peak cognitive window (usually early morning). Reserve it for deep, unstructured problem solving - no phone, no notifications, pure flow.",
       "Remember Marcus Aurelius: 'You have power over your mind - not outside events. Realize this, and you will find strength.' Ignore what you cannot control."
     ]
   }
@@ -81,7 +81,7 @@ export function searchLocalKnowledge(userQuery) {
         // Return a randomized matching answer from knowledge base
         const answers = entry.answers;
         const selected = answers[Math.floor(Math.random() * answers.length)];
-        return `⚡ [FLUX Local Knowledge]: ${selected}`;
+        return `[FLUX Knowledge]: ${selected}`;
       }
     }
   }
@@ -95,5 +95,5 @@ export function getOfflineAIResponse(userQuery) {
 
   // Varied fallback insight so it never repeats the exact same single phrase
   const idx = Math.floor(Math.random() * FALLBACK_INSIGHTS.length);
-  return `⚡ [FLUX Coach]: ${FALLBACK_INSIGHTS[idx]}`;
+  return `[FLUX Coach]: ${FALLBACK_INSIGHTS[idx]}`;
 }

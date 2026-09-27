@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Flame, Crown, Users, Plus, Copy, Sparkles,
   Trophy, RefreshCw, Wifi, WifiOff, ChevronRight
@@ -11,6 +12,7 @@ import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
 import { getRoadmapTemplate } from '../mockAI';
 import RenderAvatar from '../components/Avatar';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 // ─── Community Explore Goals ──────────────────────────────────────────────────
 const EXPLORE_COMMUNITY_GOALS = [
@@ -89,7 +91,7 @@ function LeaderboardRow({ user, rank }) {
       {/* Avatar */}
       <div style={{
         width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-        background: isMe ? 'linear-gradient(135deg, #0ea5e9, #6366f1)' : 'var(--bg-secondary)',
+        background: isMe ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'var(--bg-secondary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 18, overflow: 'hidden',
         border: `2px solid ${isMe ? '#0ea5e9' : 'var(--glass-border)'}`,
@@ -111,8 +113,8 @@ function LeaderboardRow({ user, rank }) {
           {isMe && (
             <span style={{
               fontSize: 8, fontWeight: 800,
-              background: 'linear-gradient(135deg,#0ea5e9,#6366f1)', color: '#fff',
-              padding: '2px 6px', borderRadius: 99, letterSpacing: '0.5px', flexShrink: 0,
+              background: 'var(--accent-sky)', color: '#fff',
+              padding: '2px 6px', borderRadius: 4, letterSpacing: '0.5px', flexShrink: 0,
             }}>YOU</span>
           )}
           {rank === 1 && !isMe && (
@@ -230,14 +232,14 @@ export default function Tribe({ onNavigate }) {
     return () => { if (unsubRef.current) unsubRef.current(); };
   }, [userId]);
 
-  // Build final sorted leaderboard — always include self even if doc not yet indexed
+  // Build final sorted leaderboard - always include self even if doc not yet indexed
   const currentUserEntry = {
     id: auth.currentUser?.uid || userId || 'me',
     name: userName || 'Scholar (You)',
     streak: streak || 0,
     points: points || 0,
     level: getLevel ? getLevel() : 1,
-    avatar: userAvatar || '⚡',
+    avatar: userAvatar || 'U',
     isMe: true,
   };
 
@@ -260,6 +262,15 @@ export default function Tribe({ onNavigate }) {
     setActiveSection('goals');
   };
 
+  useEffect(() => {
+    if (showCreateModal) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+    return () => unlockScroll();
+  }, [showCreateModal]);
+
   const handleCreateCustomGoal = () => {
     if (!title.trim()) return;
     addChallenge(
@@ -270,36 +281,55 @@ export default function Tribe({ onNavigate }) {
       ]
     );
     setTitle(''); setSubtitle(''); setShowCreateModal(false);
-    showToast('New Custom Goal Created & Activated! 🚀', '✨');
+    showToast('Custom goal activated', 'check');
   };
 
   const SECTIONS = [
-    { id: 'leaderboard', label: '🏆 Rankings' },
-    { id: 'goals',       label: '🎯 My Goals' },
-    { id: 'explore',     label: '🌍 Explore' },
+    { id: 'leaderboard', label: 'Rankings' },
+    { id: 'goals',       label: 'My Goals' },
+    { id: 'explore',     label: 'Explore' },
   ];
 
   return (
     <div className="tab-page" style={{ paddingBottom: 100 }}>
 
       {/* Create Modal */}
-      {showCreateModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: 'var(--bg-card)', borderRadius: 28, padding: 28, width: '100%', maxWidth: 380, boxShadow: 'var(--shadow-card-md)', animation: 'slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
-            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>Create New Goal</h3>
-            <div className="section-label">Emoji & Title</div>
+      {showCreateModal && createPortal(
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 9999, background: 'rgba(15,23,42,0.7)',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20, overscrollBehavior: 'none', touchAction: 'none',
+          }}
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card)', borderRadius: 24, padding: '28px 24px',
+              width: '100%', maxWidth: 380, boxShadow: 'var(--shadow-card-md)',
+              animation: 'slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+              touchAction: 'pan-y', border: '1px solid var(--glass-border)',
+            }}
+          >
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>Create New Goal</h3>
+            <div className="section-label">Goal Icon &amp; Title</div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <input className="flux-input" style={{ width: 60, textAlign: 'center', fontSize: 20 }} value={emoji} onChange={(e) => setEmoji(e.target.value)} maxLength={2} />
               <input className="flux-input" style={{ flex: 1 }} placeholder="e.g. 30 Days 5AM Study" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
             <div className="section-label">Description</div>
-            <input className="flux-input mb-24" placeholder="e.g. Wake up early & complete 1 hour study" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+            <input className="flux-input mb-24" placeholder="e.g. Wake up early &amp; complete 1 hour study" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setShowCreateModal(false)} className="btn btn-ghost flex-1" style={{ borderRadius: 16 }}>Cancel</button>
-              <button onClick={handleCreateCustomGoal} className="btn btn-primary flex-1" style={{ borderRadius: 16 }}>Create Goal</button>
+              <button onClick={() => setShowCreateModal(false)} className="btn btn-ghost flex-1" style={{ borderRadius: 14 }}>Cancel</button>
+              <button onClick={handleCreateCustomGoal} className="btn btn-primary flex-1" style={{ borderRadius: 14 }}>Create Goal</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Header ── */}
@@ -347,12 +377,12 @@ export default function Tribe({ onNavigate }) {
                 ? <Wifi size={14} color="#10b981" />
                 : <WifiOff size={14} color="#94a3b8" />}
               <span style={{ fontSize: 11, fontWeight: 700, color: isOnline ? '#10b981' : '#94a3b8' }}>
-                {isOnline ? 'Live Leaderboard' : 'Offline — Cached'}
+                {isOnline ? 'Live Leaderboard' : 'Offline - Cached'}
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {myRank > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-sky)', background: 'rgba(14,165,233,0.1)', padding: '3px 8px', borderRadius: 99 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-sky)', background: 'rgba(14,165,233,0.1)', padding: '3px 8px', borderRadius: 6 }}>
                   Your Rank: #{myRank}
                 </span>
               )}
@@ -430,9 +460,9 @@ export default function Tribe({ onNavigate }) {
           {/* Navigate to Focus */}
           <button
             onClick={() => onNavigate && onNavigate('focus')}
-            style={{ width: '100%', marginTop: 14, padding: '14px', background: 'linear-gradient(135deg,#0ea5e9,#6366f1)', color: '#fff', border: 'none', borderRadius: 18, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'Outfit, sans-serif', boxShadow: '0 8px 24px rgba(14,165,233,0.35)' }}
+            style={{ width: '100%', marginTop: 14, padding: '14px', background: 'var(--accent-sky)', color: '#fff', border: 'none', borderRadius: 14, fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'Outfit, sans-serif', boxShadow: 'var(--shadow-button-sky)' }}
           >
-            ⚡ Start Focus Session to Earn XP <ChevronRight size={16} />
+            Start Focus Session to Earn XP <ChevronRight size={16} />
           </button>
         </div>
       )}
@@ -499,12 +529,12 @@ export default function Tribe({ onNavigate }) {
       {/* ══ EXPLORE ══ */}
       {activeSection === 'explore' && (
         <div>
-          <div className="card card-violet mb-16" style={{ padding: '18px 20px' }}>
+          <div className="card card-dark mb-16" style={{ padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Sparkles size={18} color="#fde68a" />
+              <BarChart2 size={18} color="#38bdf8" />
               <div>
                 <h4 style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>Top Community Roadmaps</h4>
-                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, marginTop: 2 }}>Copy proven routines directly into your goals</p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 2 }}>Copy proven routines directly into your goals</p>
               </div>
             </div>
           </div>

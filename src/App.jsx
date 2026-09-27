@@ -95,12 +95,15 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {/* ⚡ App Splash Launch Screen */}
+      {/* Notch & Status Bar Shield */}
+      <div className="status-bar-shield" aria-hidden="true" />
+
+      {/* App Splash Launch Screen */}
       {showSplash ? (
         <SplashScreen onFinish={() => setShowSplash(false)} />
       ) : null}
 
-      {/* 🔐 Dedicated Google Authentication Screen */}
+      {/* Dedicated Google Authentication Screen */}
       {!isAuthenticated ? (
         <AuthModal onComplete={() => {
           const done = localStorage.getItem('flux-onboarding-done');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Sparkles, Calendar, ChevronDown, ChevronUp, MessageSquare, Loader2, Edit3, Trash2 } from 'lucide-react';
+import { Star, Sparkles, Calendar, ChevronDown, ChevronUp, MessageSquare, Loader2, Edit3, Trash2, BookOpen } from 'lucide-react';
 import useStore from '../store/useStore';
 import { getJournalInsight } from '../mockAI';
 import { showToast } from '../components/Toast';
@@ -48,12 +48,12 @@ function EntryCard({ entry }) {
     if (!editText.trim()) return;
     editJournalEntry(entry.id, editText.trim(), editRating);
     setIsEditing(false);
-    showToast('Journal entry updated! 📝', '✨');
+    showToast('Journal entry updated', 'info');
   };
 
   const handleDelete = () => {
     deleteJournalEntry(entry.id);
-    showToast('Journal entry deleted 🗑️', '✨');
+    showToast('Journal entry deleted', 'info');
   };
 
   return (
@@ -182,16 +182,16 @@ function EntryCard({ entry }) {
           <div className="flex items-center gap-8 mb-8">
             <div style={{
               width: 32, height: 32,
-              background: 'var(--accent-violet)',
+              background: 'var(--accent-sky)',
               borderRadius: '10px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff',
-              boxShadow: '0 2px 6px rgba(124, 58, 237, 0.3)',
+              boxShadow: '0 2px 8px rgba(14, 165, 233, 0.3)',
               flexShrink: 0,
             }}>
               <MessageSquare size={16} />
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#c084fc' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-sky)' }}>
               AI Insight
             </span>
           </div>
@@ -220,7 +220,7 @@ export default function Journal() {
       setText('');
       setRating(3);
       setAnalyzing(false);
-      showToast('Entry saved with AI insight 📖', '✨');
+      showToast('Entry saved with coach insight', 'info');
     }, 1100);
   };
 
@@ -229,13 +229,13 @@ export default function Journal() {
     addJournalEntry(text, rating, null);
     setText('');
     setRating(3);
-    showToast('Journal entry saved 📝', '📖');
+    showToast('Journal entry saved', 'info');
   };
 
   const totalEntries = journalEntries.length;
   const avgRating = totalEntries > 0
     ? (journalEntries.reduce((a, e) => a + (e.rating || 3), 0) / totalEntries).toFixed(1)
-    : '—';
+    : 'N/A';
 
   return (
     <div className="tab-page">
@@ -249,8 +249,8 @@ export default function Journal() {
           onClick={handleAnalyze}
           disabled={!text.trim() || analyzing}
           style={{
-            background: analyzing ? '#f5f3ff' : '#ede9fe',
-            color: '#7c3aed',
+            background: analyzing ? '#e0f2fe' : '#e0f2fe',
+            color: '#0284c7',
             border: 'none',
             borderRadius: '14px',
             padding: '10px 16px',
@@ -342,7 +342,9 @@ export default function Journal() {
 
       {journalEntries.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📖</div>
+          <div className="empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <BookOpen size={36} color="var(--text-muted)" />
+          </div>
           <div className="empty-title">No entries yet</div>
           <div className="empty-desc">Write your first journal entry above to start tracking your journey.</div>
         </div>

@@ -13,23 +13,23 @@ if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
 }
 
 const HYPE_MESSAGES = [
-  "With {streak} days of fire and {points} points stacked, you're not just building habits — you're building a different version of yourself. Don't stop now.",
-  "Day {streak} and counting — most people quit on Day 3. You're still here, you're still grinding, and {points} points prove it.",
+  "With {streak} days of fire and {points} points stacked, you're not just building habits - you're building a different version of yourself. Don't stop now.",
+  "Day {streak} and counting - most people quit on Day 3. You're still here, you're still grinding, and {points} points prove it.",
   "The version of you from 3 months ago would be amazed at what you've already built in {streak} days. Keep going.",
   "{points} points earned through pure discipline. You're in the top 1% of people who actually follow through. Level up today.",
   "{streak}-day streak? That's not luck, that's identity. You ARE someone who shows up every single day. Prove it again.",
-  "Every distraction you've ignored, every time you chose deep work over dopamine — {points} points is just the receipt. The real prize is who you're becoming.",
+  "Every distraction you've ignored, every time you chose deep work over dopamine - {points} points is just the receipt. The real prize is who you're becoming.",
   "Day {streak}. You've already won more than most people ever will. Now finish the day stronger than you started it.",
 ];
 
 const JOURNAL_INSIGHTS = [
-  "What you've described shows a real pattern of self-awareness — that's the foundation of lasting change. Trust the process, especially on the days it feels hard.",
+  "What you've described shows a real pattern of self-awareness - that's the foundation of lasting change. Trust the process, especially on the days it feels hard.",
   "The fact that you took time to reflect, even on a tough day, is the habit that compounds over time. Most people skip this step. You didn't.",
   "Your entry reveals someone who cares deeply about growth. That tension you're feeling? It's called progress. It means you're pushing your limits.",
   "This kind of honest reflection is rare. The wins you've logged today are proof that your system is working, even when it doesn't feel like it.",
-  "Reading this, I can tell you gave it everything today. Rest is part of the process — recovery isn't weakness, it's strategy.",
+  "Reading this, I can tell you gave it everything today. Rest is part of the process - recovery isn't weakness, it's strategy.",
   "The small frustrations you mentioned are totally normal at this stage. Your brain is literally rewiring itself. Stick with the system for two more weeks and you'll feel the shift.",
-  "There's so much clarity in what you wrote. You know exactly what works for you — now it's just about protecting that environment every single day.",
+  "There's so much clarity in what you wrote. You know exactly what works for you - now it's just about protecting that environment every single day.",
 ];
 
 // Comprehensive Pre-trained Knowledge Base for Indian Competitive Exams, Boards & Productivity

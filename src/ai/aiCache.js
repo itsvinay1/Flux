@@ -1,11 +1,11 @@
 /**
- * FLUX — Smart AI Cache
+ * FLUX - Smart AI Cache
  *
  * Problem: Calling Gemini API on every tap costs money and wastes quota.
  *
  * Solution:
  * 1. Cache every AI response in localStorage with a TTL
- * 2. Use a context fingerprint as cache key — same streak/rating = same cache
+ * 2. Use a context fingerprint as cache key - same streak/rating = same cache
  * 3. Rate-limit by call type (hype: 5/day, journal: 3/day, roadmap: 10/day)
  * 4. Pre-pool curated responses for zero-latency fallback
  * 5. Batch: combine multiple AI needs into one API call where possible
@@ -16,9 +16,9 @@ const RATE_KEY = 'flux-ai-rates';
 
 // TTL in milliseconds for each response type
 const TTL = {
-  hype: 4 * 60 * 60 * 1000,       // 4 hours — same streak = same message is fine
-  journal: 24 * 60 * 60 * 1000,    // 24 hours — insight per journal entry
-  roadmap: 7 * 24 * 60 * 60 * 1000, // 7 days — roadmap for same goal reused
+  hype: 4 * 60 * 60 * 1000,       // 4 hours - same streak = same message is fine
+  journal: 24 * 60 * 60 * 1000,    // 24 hours - insight per journal entry
+  roadmap: 7 * 24 * 60 * 60 * 1000, // 7 days - roadmap for same goal reused
   weekly: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -157,7 +157,7 @@ export async function cachedAICall(type, context, apiFn, fallbackFn) {
   const cacheKey = fingerprint(type, context);
   const remaining = getRemainingCalls(type);
 
-  // 1. Check cache first — fastest path, zero cost
+  // 1. Check cache first - fastest path, zero cost
   const cached = getCached(cacheKey);
   if (cached) {
     console.log(`[AI Cache] HIT for ${type} (key: ${cacheKey})`);
@@ -166,7 +166,7 @@ export async function cachedAICall(type, context, apiFn, fallbackFn) {
 
   // 2. Check rate limit
   if (isRateLimited(type)) {
-    console.log(`[AI Cache] RATE LIMITED for ${type} — using fallback`);
+    console.log(`[AI Cache] RATE LIMITED for ${type} - using fallback`);
     const fb = fallbackFn(context);
     return { result: fb, source: 'fallback', remaining: 0 };
   }
@@ -177,12 +177,12 @@ export async function cachedAICall(type, context, apiFn, fallbackFn) {
     if (result) {
       incrementRate(type);
       setCached(cacheKey, result, TTL[type]);
-      console.log(`[AI Cache] MISS — fetched from API for ${type}`);
+      console.log(`[AI Cache] MISS - fetched from API for ${type}`);
       return { result, source: 'api', remaining: getRemainingCalls(type) };
     }
     throw new Error('Empty API response');
   } catch (err) {
-    // 4. API failed — use fallback (never show error to user)
+    // 4. API failed - use fallback (never show error to user)
     console.warn(`[AI Cache] API failed for ${type}:`, err.message);
     const fb = fallbackFn(context);
     return { result: fb, source: 'fallback', remaining };

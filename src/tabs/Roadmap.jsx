@@ -6,12 +6,12 @@ import { showToast } from '../components/Toast';
 import CreateChallengeModal from '../components/CreateChallengeModal';
 
 const PRESET_GOALS = [
-  { id: 'gate', label: 'GATE 2026', emoji: '🎓', color: '#7c3aed' },
-  { id: 'neet', label: 'NEET Prep', emoji: '🩺', color: '#0ea5e9' },
-  { id: 'jee', label: 'IIT JEE', emoji: '🚀', color: '#f59e0b' },
+  { id: 'gate', label: 'GATE 2026', emoji: '🎓', color: '#0ea5e9' },
+  { id: 'neet', label: 'NEET Prep', emoji: '🩺', color: '#0284c7' },
+  { id: 'jee', label: 'IIT JEE', emoji: '🎯', color: '#f59e0b' },
   { id: 'govt', label: 'Govt Exams', emoji: '🏛️', color: '#10b981' },
-  { id: 'boards', label: 'Board Exams', emoji: '📚', color: '#6366f1' },
-  { id: 'relax', label: 'Relax & Calm', emoji: '🧘', color: '#ec4899' },
+  { id: 'boards', label: 'Board Exams', emoji: '📚', color: '#38bdf8' },
+  { id: 'relax', label: 'Focus & Calm', emoji: '🧘', color: '#0ea5e9' },
 ];
 
 function TimelineTask({ task, index, onComplete, onDelete, totalCompleted }) {
@@ -34,7 +34,7 @@ function TimelineTask({ task, index, onComplete, onDelete, totalCompleted }) {
           left: '19px', top: '40px', bottom: 0,
           width: '2px',
           background: task.completed ? '#10b981' : 'var(--glass-border)',
-          borderRadius: '99px',
+          borderRadius: '2px',
           transition: 'background 0.5s ease',
         }} />
       )}
@@ -111,7 +111,7 @@ function TimelineTask({ task, index, onComplete, onDelete, totalCompleted }) {
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <span className="badge badge-violet">
+            <span className="badge badge-sky">
               +{task.points || 30}pts
             </span>
             <button
@@ -259,7 +259,7 @@ export default function Roadmap() {
               style={{
                 display: 'flex', alignItems: 'center', gap: '4px',
                 padding: '6px 12px 6px 16px',
-                borderRadius: '99px',
+                borderRadius: '12px',
                 background: isSelected ? 'var(--accent-sky)' : 'var(--bg-card)',
                 border: `1.5px solid ${isSelected ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
                 color: isSelected ? '#fff' : 'var(--text-secondary)',
@@ -294,15 +294,15 @@ export default function Roadmap() {
         })}
       </div>
 
-      {/* AI & Custom Goal Input Card (FIXED CONTRAST & VISIBILITY) */}
-      <div className="card card-violet mb-16" style={{ padding: '22px' }}>
+      {/* AI Goal Input Card */}
+      <div className="card card-dark mb-16" style={{ padding: '22px' }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div className="flex items-center gap-8 mb-12">
-            <Wand2 size={18} color="#fde68a" />
-            <h3 style={{ fontWeight: 700, fontSize: '15px', color: '#ffffff' }}>✨ Generate New Goal Roadmap</h3>
+            <Wand2 size={18} color="#38bdf8" />
+            <h3 style={{ fontWeight: 700, fontSize: '15px', color: '#ffffff' }}>Generate Goal Roadmap</h3>
           </div>
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '12px', fontWeight: 600 }}>
-            Type any goal or exam (e.g. GATE, NEET, IIT JEE, Board Exams, UPSC):
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', marginBottom: '12px', fontWeight: 500 }}>
+            Enter any goal or exam (e.g. GATE, NEET, IIT JEE, UPSC):
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <input
@@ -313,16 +313,15 @@ export default function Roadmap() {
               onKeyDown={(e) => e.key === 'Enter' && handleGenerateAI()}
               style={{
                 flex: 1,
-                background: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                border: '1.5px solid var(--glass-border)',
-                borderRadius: '16px',
-                padding: '14px 16px',
+                background: 'rgba(255,255,255,0.10)',
+                color: '#fff',
+                border: '1.5px solid rgba(255,255,255,0.15)',
+                borderRadius: '14px',
+                padding: '12px 14px',
                 fontSize: '14px',
-                fontWeight: 600,
+                fontWeight: 500,
                 outline: 'none',
                 fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
               }}
             />
             <button
@@ -330,10 +329,10 @@ export default function Roadmap() {
               onClick={handleGenerateAI}
               disabled={generating || !goalInput.trim()}
               style={{
-                background: '#0f172a',
+                background: '#0ea5e9',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '16px',
+                borderRadius: '14px',
                 padding: '0 20px',
                 fontWeight: 800,
                 cursor: 'pointer',
@@ -342,7 +341,7 @@ export default function Roadmap() {
                 minWidth: '54px',
                 fontFamily: 'Outfit, sans-serif',
                 opacity: !goalInput.trim() ? 0.6 : 1,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                boxShadow: '0 4px 12px rgba(14,165,233,0.3)',
                 transition: 'all 0.2s ease',
               }}
             >

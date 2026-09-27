@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, X, Share2 } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 export default function ShareCardModal({ onClose }) {
   const userName = useStore((s) => s.userName);
@@ -14,6 +16,11 @@ export default function ShareCardModal({ onClose }) {
 
   const cardRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    lockScroll();
+    return () => unlockScroll();
+  }, []);
 
   const totalHours = (totalFocusMinutes / 60).toFixed(1);
   const levelName = getLevelName();
@@ -32,11 +39,11 @@ export default function ShareCardModal({ onClose }) {
         
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: `FLUX Streak: ${streak} Days!`,
-            text: `Crushing goals daily on FLUX! 🔥 My streak is ${streak} days!`,
+            title: `FLUX Streak: ${streak} Days`,
+            text: `Consistent daily focus on FLUX. Current streak: ${streak} days.`,
             files: [file],
           });
-          showToast('Shared Story Card! 🚀', '✨');
+          showToast('Shared Story Card', 'check');
           return;
         }
       }
@@ -46,31 +53,45 @@ export default function ShareCardModal({ onClose }) {
       link.download = `FLUX-Streak-${streak}Days.jpg`;
       link.href = dataUrl;
       link.click();
-      showToast('JPEG Story Card saved! 📸', '✨');
+      showToast('Story Card saved to device', 'check');
     } catch (err) {
       console.error('Failed to generate JPEG image:', err);
-      showToast('Error generating story image', '⚠️');
+      showToast('Error generating story image', 'alert');
     } finally {
       setDownloading(false);
     }
   };
 
-  return (
+  return createPortal(
     <div 
       style={{
-        position: 'fixed', inset: 0, zIndex: 999,
-        background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(12px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px', overflowY: 'auto',
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 9999,
+        background: 'rgba(15, 23, 42, 0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
       }} 
       onClick={onClose}
     >
       <div 
         onClick={(e) => e.stopPropagation()} 
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
-          width: '100%', maxWidth: '320px', maxHeight: '92vh',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
-          animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          width: '100%',
+          maxWidth: '320px',
+          maxHeight: '92dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+          animation: 'slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
         {/* Header Bar with Close */}
@@ -78,9 +99,10 @@ export default function ShareCardModal({ onClose }) {
           <span style={{ color: '#fff', fontWeight: 800, fontSize: '15px' }}>Share Streak Story</span>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{
-              background: 'rgba(255,255,255,0.2)', color: '#fff',
-              border: 'none', borderRadius: '50%', width: 32, height: 32,
+              background: 'rgba(255,255,255,0.15)', color: '#fff',
+              border: 'none', borderRadius: '10px', width: 32, height: 32,
               display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
             }}
           >
@@ -93,8 +115,8 @@ export default function ShareCardModal({ onClose }) {
           ref={cardRef}
           style={{
             width: '100%', aspectRatio: '9/16', maxHeight: '56vh',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
-            borderRadius: '24px', padding: '20px 18px',
+            background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)',
+            borderRadius: '20px', padding: '20px 18px',
             color: '#fff', display: 'flex', flexDirection: 'column',
             justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.15)',
             boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.5)',
@@ -106,7 +128,7 @@ export default function ShareCardModal({ onClose }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{
                 width: 26, height: 26, borderRadius: '8px',
-                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 900, fontSize: '13px', color: '#fff',
               }}>
@@ -114,31 +136,30 @@ export default function ShareCardModal({ onClose }) {
               </div>
               <span style={{ fontWeight: 800, fontSize: '15px', letterSpacing: '0.8px' }}>FLUX</span>
             </div>
-            <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.15)', padding: '3px 10px', borderRadius: 99, fontWeight: 700 }}>
+            <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.15)', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
               {levelName}
             </span>
           </div>
 
           {/* Main Hero Streak */}
           <div style={{ textAlign: 'center', margin: '8px 0' }}>
-            <div style={{ fontSize: '38px', marginBottom: '2px' }}>🔥</div>
             <div style={{ fontSize: '42px', fontWeight: 900, lineHeight: 1, letterSpacing: '-1.5px', color: '#fff' }}>
               {streak} DAYS
             </div>
             <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginTop: '6px' }}>
-              Unstoppable Streak
+              Current Streak
             </div>
           </div>
 
           {/* User Info & Stats */}
-          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)', borderRadius: '18px', padding: '14px', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <div style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)', borderRadius: '16px', padding: '14px', border: '1px solid rgba(255,255,255,0.12)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+              <div style={{ width: 34, height: 34, borderRadius: '10px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
                 {userAvatar}
               </div>
               <div style={{ overflow: 'hidden' }}>
                 <div style={{ fontWeight: 800, fontSize: '14px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>Building discipline daily</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>Building daily discipline</div>
               </div>
             </div>
 
@@ -156,7 +177,7 @@ export default function ShareCardModal({ onClose }) {
 
           {/* Footer Call to Action */}
           <div style={{ textAlign: 'center', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>
-            Join the focus movement · <strong style={{ color: '#fff' }}>#FluxApp</strong>
+            Track focus on <strong style={{ color: '#fff' }}>FLUX</strong>
           </div>
         </div>
 
@@ -165,11 +186,12 @@ export default function ShareCardModal({ onClose }) {
           onClick={handleDownload}
           disabled={downloading}
           className="btn btn-primary w-full"
-          style={{ padding: '13px', borderRadius: '16px', fontSize: '14px', fontWeight: 800, boxShadow: '0 6px 20px rgba(14,165,233,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          style={{ padding: '13px', borderRadius: '14px', fontSize: '14px', fontWeight: 800, boxShadow: '0 6px 20px rgba(14,165,233,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          <Share2 size={18} /> {downloading ? 'Generating Image...' : 'Share / Save Story Image'}
+          <Share2 size={18} /> {downloading ? 'Generating Image...' : 'Share or Save Story'}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

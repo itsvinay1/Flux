@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   LayoutDashboard, Route, Timer, BrainCircuit, MoreHorizontal,
   NotebookPen, GraduationCap, UsersRound, CircleUser, X
 } from 'lucide-react';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 // Primary tabs always shown in bottom bar
 const PRIMARY_TABS = [
@@ -15,9 +17,9 @@ const PRIMARY_TABS = [
 // Tabs in the "More" bottom sheet
 const MORE_TABS = [
   { id: 'journal',  label: 'Journal',  Icon: NotebookPen,   desc: 'Reflect on your day' },
-  { id: 'syllabus', label: 'Study',    Icon: GraduationCap, desc: 'Syllabus & course tracker' },
-  { id: 'tribe',    label: 'Tribe',    Icon: UsersRound,    desc: 'Leaderboard & community goals' },
-  { id: 'profile',  label: 'Profile',  Icon: CircleUser,    desc: 'Stats, settings & account' },
+  { id: 'syllabus', label: 'Study',    Icon: GraduationCap, desc: 'Syllabus tracker' },
+  { id: 'tribe',    label: 'Tribe',    Icon: UsersRound,    desc: 'Leaderboard' },
+  { id: 'profile',  label: 'Profile',  Icon: CircleUser,    desc: 'Settings & account' },
 ];
 
 const MORE_IDS = MORE_TABS.map((t) => t.id);
@@ -26,53 +28,77 @@ export default function BottomNav({ activeTab, onTabChange }) {
   const [showMore, setShowMore] = useState(false);
   const moreIsActive = MORE_IDS.includes(activeTab);
 
+  // Lock background scroll when the "More" sheet is open
+  useEffect(() => {
+    if (showMore) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+    return () => unlockScroll();
+  }, [showMore]);
+
   const handleTabChange = (id) => {
     onTabChange(id);
     setShowMore(false);
   };
 
+  const closeMore = () => setShowMore(false);
+
   return (
     <>
       {/* ── More Sheet Overlay ── */}
-      {showMore && (
+      {showMore && createPortal(
         <div
           style={{
-            position: 'fixed', inset: 0, zIndex: 200,
-            background: 'rgba(10,16,30,0.55)',
-            backdropFilter: 'blur(6px)',
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 9999,
+            background: 'rgba(10,16,30,0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            overscrollBehavior: 'none',
+            touchAction: 'none',
           }}
-          onClick={() => setShowMore(false)}
+          onClick={closeMore}
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             style={{
               position: 'absolute', bottom: 0, left: 0, right: 0,
               maxWidth: 480, margin: '0 auto',
-              background: 'rgba(22,32,50,0.97)',
+              background: 'rgba(22,32,50,0.98)',
               borderTop: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '28px 28px 0 0',
-              padding: '20px 20px 40px',
+              borderRadius: '24px 24px 0 0',
+              padding: '20px 20px calc(36px + env(safe-area-inset-bottom, 16px))',
               backdropFilter: 'blur(32px)',
-              boxShadow: '0 -20px 60px rgba(0,0,0,0.5)',
+              WebkitBackdropFilter: 'blur(32px)',
+              boxShadow: '0 -16px 48px rgba(0,0,0,0.5)',
               animation: 'slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+              touchAction: 'pan-y',
             }}
           >
             {/* Drag handle */}
-            <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 99, margin: '0 auto 20px' }} />
+            <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.22)', borderRadius: 4, margin: '0 auto 20px' }} />
 
             {/* Sheet title row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px' }}>More Sections</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px' }}>More Sections</span>
               <button
-                onClick={() => setShowMore(false)}
-                style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 99, padding: '5px 5px', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
+                onClick={closeMore}
+                style={{
+                  background: 'rgba(255,255,255,0.08)', border: 'none',
+                  borderRadius: 10, padding: 7, cursor: 'pointer',
+                  color: '#94a3b8', display: 'flex', alignItems: 'center',
+                }}
               >
                 <X size={16} />
               </button>
             </div>
 
             {/* Grid of more tabs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {MORE_TABS.map(({ id, label, Icon, desc }) => {
                 const isActive = activeTab === id;
                 return (
@@ -81,34 +107,35 @@ export default function BottomNav({ activeTab, onTabChange }) {
                     onClick={() => handleTabChange(id)}
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                      gap: 8, padding: '16px', borderRadius: 20,
+                      gap: 8, padding: '14px', borderRadius: 16,
                       background: isActive
-                        ? 'linear-gradient(135deg, rgba(14,165,233,0.25), rgba(99,102,241,0.2))'
-                        : 'rgba(255,255,255,0.06)',
-                      border: `1.5px solid ${isActive ? 'rgba(14,165,233,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        ? 'rgba(14,165,233,0.18)'
+                        : 'rgba(255,255,255,0.05)',
+                      border: `1.5px solid ${isActive ? 'rgba(14,165,233,0.4)' : 'rgba(255,255,255,0.07)'}`,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       textAlign: 'left',
                     }}
                   >
                     <div style={{
-                      width: 40, height: 40, borderRadius: 14,
-                      background: isActive ? 'linear-gradient(135deg, #0ea5e9, #6366f1)' : 'rgba(255,255,255,0.1)',
+                      width: 40, height: 40, borderRadius: 12,
+                      background: isActive ? 'linear-gradient(135deg, #0ea5e9, #3b82f6)' : 'rgba(255,255,255,0.08)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: isActive ? '0 6px 18px rgba(14,165,233,0.4)' : 'none',
+                      boxShadow: isActive ? '0 4px 14px rgba(14,165,233,0.35)' : 'none',
                     }}>
                       <Icon size={20} color={isActive ? '#fff' : '#94a3b8'} strokeWidth={isActive ? 2.5 : 1.8} />
                     </div>
                     <div>
-                      <div style={{ color: isActive ? '#38bdf8' : '#e2e8f0', fontWeight: 700, fontSize: 14, fontFamily: 'Outfit, sans-serif' }}>{label}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 500, marginTop: 2, lineHeight: 1.4, fontFamily: 'Outfit, sans-serif' }}>{desc}</div>
+                      <div style={{ color: isActive ? '#38bdf8' : '#e2e8f0', fontWeight: 700, fontSize: 13, fontFamily: 'Outfit, sans-serif' }}>{label}</div>
+                      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 500, marginTop: 2, lineHeight: 1.4, fontFamily: 'Outfit, sans-serif' }}>{desc}</div>
                     </div>
                   </button>
                 );
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Bottom Bar ── */}

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Edit3, Save, Trophy, Flame, Clock, Target,
   CheckCircle, Wifi, WifiOff, Trash2, AlertTriangle,
   ChevronRight, Shield, FileText, Database, Zap,
-  LogOut, RefreshCw, Star, Lock, Snowflake
+  LogOut, RefreshCw, Star, Lock, Snowflake, BookOpen
 } from 'lucide-react';
 import useStore, { ACHIEVEMENTS, getLevelName } from '../store/useStore';
 import { useNetworkStore, useSyncQueue } from '../sync/syncManager';
@@ -12,6 +13,7 @@ import { showToast } from '../components/Toast';
 import RenderAvatar from '../components/Avatar';
 import PrivacyPolicyModal from '../components/PrivacyPolicy';
 import TermsOfServiceModal from '../components/TermsOfService';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 const AVATAR_OPTIONS = ['⚡', '🚀', '🔥', '🧠', '💎', '🦁', '🌊', '⭐', '🎯', '💪', '🦅', '🌿'];
 
@@ -26,42 +28,63 @@ function EditProfileModal({ onClose }) {
   const [avatar, setAvatar] = useState(userAvatar);
   const [bio, setBio] = useState(userBio);
 
+  useEffect(() => {
+    lockScroll();
+    return () => unlockScroll();
+  }, []);
+
   const handleSave = () => {
     if (!name.trim()) return;
     updateProfile({ userName: name.trim(), userAvatar: avatar, userBio: bio.trim() });
-    showToast('Profile updated ✨', '👤');
+    showToast('Profile updated', 'check');
     onClose();
   };
 
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-    }} onClick={onClose}>
+  return createPortal(
+    <div
+      style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 9999,
+        background: 'rgba(15,23,42,0.65)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
+      }}
+      onClick={onClose}
+    >
       <div
         onClick={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
-          background: '#fff', borderRadius: '32px 32px 0 0',
-          padding: '28px 24px 40px', width: '100%', maxWidth: 430,
-          boxShadow: '0 -20px 60px rgba(0,0,0,0.15)',
-          animation: 'slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+          background: 'var(--bg-card)',
+          borderRadius: '24px 24px 0 0',
+          padding: '24px 20px calc(36px + env(safe-area-inset-bottom, 16px))',
+          width: '100%',
+          maxWidth: 480,
+          boxShadow: '0 -20px 60px rgba(0,0,0,0.25)',
+          animation: 'slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+          touchAction: 'pan-y',
+          borderTop: '1px solid var(--glass-border)',
         }}
       >
-        <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 24px' }} />
+        <div style={{ width: 36, height: 4, background: 'var(--glass-border)', borderRadius: 4, margin: '0 auto 20px' }} />
 
-        <h3 style={{ fontWeight: 800, fontSize: '20px', marginBottom: '20px', color: '#0f172a' }}>Edit Profile</h3>
+        <h3 style={{ fontWeight: 800, fontSize: '18px', marginBottom: '18px', color: 'var(--text-primary)' }}>Edit Profile</h3>
 
         {/* Avatar picker */}
-        <div className="section-label">Choose Your Avatar</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+        <div className="section-label">Choose Avatar</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
           {AVATAR_OPTIONS.map((em) => (
             <button key={em} onClick={() => setAvatar(em)} style={{
-              width: 48, height: 48, borderRadius: '14px', fontSize: '24px',
-              border: `2px solid ${avatar === em ? '#0ea5e9' : '#e2e8f0'}`,
-              background: avatar === em ? '#e0f2fe' : '#f8fafc',
+              width: 44, height: 44, borderRadius: '12px', fontSize: '20px',
+              border: `2px solid ${avatar === em ? '#0ea5e9' : 'var(--glass-border)'}`,
+              background: avatar === em ? 'rgba(14,165,233,0.15)' : 'var(--bg-secondary)',
               cursor: 'pointer', transition: 'all 0.15s ease',
-              boxShadow: avatar === em ? '0 0 0 3px rgba(14,165,233,0.2)' : 'none',
             }}>
               {em}
             </button>
@@ -84,7 +107,7 @@ function EditProfileModal({ onClose }) {
           className="flux-input mb-24"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          placeholder="e.g. Building deep work habits 🧠"
+          placeholder="e.g. Building daily focus habits"
           maxLength={60}
         />
 
@@ -92,66 +115,94 @@ function EditProfileModal({ onClose }) {
           onClick={handleSave}
           disabled={!name.trim()}
           style={{
-            width: '100%', padding: '16px',
-            background: '#0f172a', color: '#fff',
-            border: 'none', borderRadius: '20px',
-            fontWeight: 700, fontSize: '16px',
+            width: '100%', padding: '14px',
+            background: 'var(--accent-sky)', color: '#fff',
+            border: 'none', borderRadius: '14px',
+            fontWeight: 700, fontSize: '15px',
             cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+            boxShadow: 'var(--shadow-button-sky)',
           }}
         >
           Save Changes
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 // ─── Delete Confirm Modal ─────────────────────────────────────────────────────
 function DeleteModal({ onClose, onConfirm }) {
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-    }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{
-        background: '#fff', borderRadius: '28px', padding: '32px 28px',
-        width: '100%', maxWidth: 340, textAlign: 'center',
-        boxShadow: '0 24px 60px rgba(0,0,0,0.2)',
-        animation: 'fadeInUp 0.3s ease',
-      }}>
+  useEffect(() => {
+    lockScroll();
+    return () => unlockScroll();
+  }, []);
+
+  return createPortal(
+    <div
+      style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        zIndex: 9999,
+        background: 'rgba(15,23,42,0.7)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        overscrollBehavior: 'none',
+        touchAction: 'none',
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--bg-card)',
+          borderRadius: '24px',
+          padding: '28px 24px',
+          width: '100%',
+          maxWidth: 360,
+          textAlign: 'center',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          animation: 'fadeInUp 0.25s ease',
+          border: '1px solid var(--glass-border)',
+        }}
+      >
         <div style={{
-          width: 64, height: 64, background: '#fef2f2', borderRadius: '50%',
+          width: 56, height: 56, background: '#fef2f2', borderRadius: '16px',
           display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
         }}>
-          <AlertTriangle size={32} color="#ef4444" />
+          <AlertTriangle size={28} color="#ef4444" />
         </div>
-        <h3 style={{ fontWeight: 800, fontSize: '20px', color: '#0f172a', marginBottom: '8px' }}>
+        <h3 style={{ fontWeight: 800, fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px' }}>
           Delete Everything?
         </h3>
-        <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.65, fontWeight: 500, marginBottom: '24px' }}>
-          This will permanently erase all your streaks, focus sessions, journal entries, and progress from this device.
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, fontWeight: 500, marginBottom: '22px' }}>
+          This will permanently erase all streaks, focus sessions, journal entries, and progress from this device.
         </p>
         <button onClick={onConfirm} style={{
-          width: '100%', padding: '14px', marginBottom: '10px',
+          width: '100%', padding: '13px', marginBottom: '10px',
           background: '#ef4444', color: '#fff', border: 'none',
-          borderRadius: '18px', fontWeight: 700, fontSize: '15px',
+          borderRadius: '14px', fontWeight: 700, fontSize: '14px',
           cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
           boxShadow: '0 4px 16px rgba(239,68,68,0.3)',
         }}>
           Yes, Delete My Data
         </button>
         <button onClick={onClose} style={{
-          width: '100%', padding: '14px',
-          background: '#f1f5f9', color: '#0f172a', border: 'none',
-          borderRadius: '18px', fontWeight: 700, fontSize: '15px',
+          width: '100%', padding: '13px',
+          background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none',
+          borderRadius: '14px', fontWeight: 700, fontSize: '14px',
           cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
         }}>
           Cancel
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -166,7 +217,7 @@ function SyncStatusBar() {
     synced:  { color: '#10b981', bg: '#ecfdf5', icon: <Wifi size={14} />,       label: 'All data backed up' },
     syncing: { color: '#0ea5e9', bg: '#e0f2fe', icon: <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />, label: 'Syncing...' },
     pending: { color: '#f59e0b', bg: '#fffbeb', icon: <WifiOff size={14} />,     label: `${pendingChanges} changes pending` },
-    error:   { color: '#ef4444', bg: '#fef2f2', icon: <WifiOff size={14} />,     label: 'Sync error — will retry' },
+    error:   { color: '#ef4444', bg: '#fef2f2', icon: <WifiOff size={14} />,     label: 'Sync error - will retry' },
   };
 
   const cfg = statusConfig[syncStatus] || statusConfig.synced;
@@ -192,15 +243,21 @@ function SyncStatusBar() {
 }
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
-function MiniStat({ emoji, label, value, color }) {
+function MiniStat({ Icon, label, value, color }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--glass-border)',
-      borderRadius: '20px', padding: '16px 14px', textAlign: 'center',
-      boxShadow: 'var(--shadow-card)',
+      borderRadius: '20px', padding: '16px 10px', textAlign: 'center',
+      boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
-      <div style={{ fontSize: '26px', marginBottom: '6px' }}>{emoji}</div>
-      <div style={{ fontSize: '22px', fontWeight: 900, color: color || 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: '12px',
+        background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: '8px',
+      }}>
+        <Icon size={18} color={color} />
+      </div>
+      <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
         {value}
       </div>
       <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '3px' }}>{label}</div>
@@ -272,9 +329,9 @@ function StreakFreezeCard() {
             onClick={() => {
               const success = activateStreakFreeze();
               if (success) {
-                showToast('Streak Freeze Activated! Rest up ❄️', '🧊');
+                showToast('Streak Freeze activated', 'info');
               } else {
-                showToast('No Freeze Tokens left! ⚠️', '❌');
+                showToast('No freeze tokens left', 'info');
               }
             }}
             disabled={streakFreezeTokens <= 0}
@@ -291,7 +348,7 @@ function StreakFreezeCard() {
               flexShrink: 0,
             }}
           >
-            Activate ❄️
+            Activate
           </button>
         )}
       </div>
@@ -307,20 +364,20 @@ function AIUsagePanel() {
   const handleClearCache = () => {
     clearAICache();
     setCleared(true);
-    showToast('AI cache cleared', '🤖');
+    showToast('AI cache cleared', 'info');
   };
 
   const items = [
-    { label: 'Hype Me Up', type: 'hype', emoji: '✨' },
-    { label: 'Roadmap Gen', type: 'roadmap', emoji: '🗺️' },
-    { label: 'Journal AI', type: 'journal', emoji: '📖' },
+    { label: 'Coach Motivation', type: 'hype' },
+    { label: 'Roadmap Generator', type: 'roadmap' },
+    { label: 'Journal Analysis', type: 'journal' },
   ];
 
   return (
     <div className="card" style={{ padding: '20px' }}>
       <div className="flex items-center justify-between mb-16">
         <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Zap size={16} color="#7c3aed" /> AI Usage Today
+          <Zap size={16} color="var(--accent-sky)" /> AI Usage Today
         </div>
         <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
           {stats.totalCached} cached responses
@@ -335,14 +392,14 @@ function AIUsagePanel() {
         return (
           <div key={item.type} style={{ marginBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
-              <span style={{ color: '#475569' }}>{item.emoji} {item.label}</span>
-              <span style={{ color: '#94a3b8' }}>{used}/{limit} calls</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
+              <span style={{ color: 'var(--text-muted)' }}>{used}/{limit} calls</span>
             </div>
-            <div style={{ height: 6, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: 6, background: 'var(--bg-secondary)', borderRadius: 4, overflow: 'hidden' }}>
               <div style={{
                 height: '100%', width: `${pct}%`,
                 background: pct > 80 ? '#ef4444' : pct > 50 ? '#f59e0b' : '#10b981',
-                borderRadius: 99, transition: 'width 0.5s ease',
+                borderRadius: 4, transition: 'width 0.5s ease',
               }} />
             </div>
           </div>
@@ -351,7 +408,7 @@ function AIUsagePanel() {
 
       <div style={{ paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
         <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '12px' }}>
-          💡 Responses are cached for up to 24h — same context = no API call needed.
+          Responses are cached for up to 24h - same context = no API call needed.
         </p>
         <button
           onClick={handleClearCache}
@@ -362,7 +419,7 @@ function AIUsagePanel() {
             cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
           }}
         >
-          {cleared ? '✅ Cleared' : '🗑 Clear AI Cache'}
+          {cleared ? 'Cleared' : 'Clear AI Cache'}
         </button>
       </div>
     </div>
@@ -462,7 +519,7 @@ export default function Profile() {
           {/* Avatar */}
           <div style={{
             width: 72, height: 72, borderRadius: '24px',
-            background: 'linear-gradient(135deg, #e0f2fe, #ede9fe)',
+            background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '36px', flexShrink: 0,
             border: '3px solid #fff',
@@ -493,9 +550,9 @@ export default function Profile() {
             id="btn-edit-profile"
             onClick={() => setShowEdit(true)}
             style={{
-              padding: '10px', background: '#f8fafc',
-              border: '1px solid #e2e8f0', borderRadius: '14px',
-              cursor: 'pointer', color: '#64748b',
+              padding: '10px', background: 'var(--bg-secondary)',
+              border: '1px solid var(--glass-border)', borderRadius: '14px',
+              cursor: 'pointer', color: 'var(--text-secondary)',
               flexShrink: 0,
             }}
           >
@@ -504,16 +561,16 @@ export default function Profile() {
         </div>
 
         {/* Level progress */}
-        <div style={{ marginTop: '20px', paddingTop: '18px', borderTop: '1px solid #f1f5f9' }}>
+        <div style={{ marginTop: '20px', paddingTop: '18px', borderTop: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, marginBottom: '8px' }}>
-            <span style={{ color: '#94a3b8' }}>Level {level} — {levelName}</span>
+            <span style={{ color: 'var(--text-muted)' }}>Level {level} - {levelName}</span>
             <span style={{ color: '#0ea5e9' }}>{levelProgress}% to next</span>
           </div>
-          <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: 8, background: 'var(--bg-secondary)', borderRadius: 4, overflow: 'hidden' }}>
             <div style={{
               height: '100%', width: `${levelProgress}%`,
-              background: 'linear-gradient(90deg, #0ea5e9, #6366f1)',
-              borderRadius: 99, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
+              background: 'linear-gradient(90deg, #0ea5e9, #0284c7)',
+              borderRadius: 4, transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
               boxShadow: '0 0 8px rgba(14,165,233,0.4)',
             }} />
           </div>
@@ -522,12 +579,12 @@ export default function Profile() {
 
       {/* ── Stats Grid ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
-        <MiniStat emoji="🔥" label="Day Streak" value={streak} color="#f97316" />
-        <MiniStat emoji="🏆" label="Points" value={points} color="#7c3aed" />
-        <MiniStat emoji="⏱" label="Focus Hrs" value={totalFocusHours} color="#0ea5e9" />
-        <MiniStat emoji="✅" label="Tasks Done" value={totalTasksCompleted} color="#10b981" />
-        <MiniStat emoji="🎯" label="Perfect Sessions" value={perfectFocusSessions} color="#0ea5e9" />
-        <MiniStat emoji="📖" label="Entries" value={journalEntries.length} color="#ec4899" />
+        <MiniStat Icon={Flame} label="Day Streak" value={streak} color="#f97316" />
+        <MiniStat Icon={Trophy} label="Points" value={points} color="#f59e0b" />
+        <MiniStat Icon={Clock} label="Focus Hrs" value={totalFocusHours} color="#0ea5e9" />
+        <MiniStat Icon={CheckCircle} label="Tasks Done" value={totalTasksCompleted} color="#10b981" />
+        <MiniStat Icon={Target} label="Perfect Sessions" value={perfectFocusSessions} color="#0ea5e9" />
+        <MiniStat Icon={BookOpen} label="Entries" value={journalEntries.length} color="#0ea5e9" />
       </div>
 
       {/* ── Streak Freeze & Vacation Mode ── */}
@@ -546,21 +603,21 @@ export default function Profile() {
               icon: <Database size={18} />,
               label: 'Your data stays on this device',
               right: (
-                <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#059669', padding: '3px 8px', borderRadius: 99, fontWeight: 700 }}>
+                <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#059669', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
                   Private
                 </span>
               ),
-              onClick: () => showToast('Data is stored privately on your device 🔒', '🛡️'),
+              onClick: () => showToast('Data is stored privately on your device', 'info'),
             },
             {
               icon: <RefreshCw size={18} />,
               label: pendingChanges > 0 ? `${pendingChanges} changes waiting to sync` : 'All data backed up',
               right: (
-                <span style={{ fontSize: '11px', background: pendingChanges > 0 ? '#fffbeb' : '#ecfdf5', color: pendingChanges > 0 ? '#d97706' : '#059669', padding: '3px 8px', borderRadius: 99, fontWeight: 700 }}>
+                <span style={{ fontSize: '11px', background: pendingChanges > 0 ? '#fffbeb' : '#ecfdf5', color: pendingChanges > 0 ? '#d97706' : '#059669', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
                   {pendingChanges > 0 ? 'Pending' : 'Synced'}
                 </span>
               ),
-              onClick: () => showToast('Sync happens automatically when online ☁️', '🔄'),
+              onClick: () => showToast('Sync happens automatically when online', 'info'),
             },
           ]}
         />

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Target, Clock, Sparkles, ArrowRight, Check, Zap } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
+import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
 const GOALS = [
   { id: 'deep_work', emoji: '🧠', title: 'Master Deep Work', desc: 'Eliminate phone distraction & lock into study/work blocks.' },
@@ -27,6 +29,11 @@ export default function OnboardingModal({ onComplete }) {
   const [targetMin, setTargetMin] = useState(30);
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('⚡');
+
+  useEffect(() => {
+    lockScroll();
+    return () => unlockScroll();
+  }, []);
 
   const handleFinish = () => {
     const finalName = userName.trim() || 'Flux User';
@@ -61,34 +68,44 @@ export default function OnboardingModal({ onComplete }) {
 
     // 4. Mark Onboarding Complete
     localStorage.setItem('flux-onboarding-done', 'true');
-    showToast(`Welcome aboard, ${finalName}! 🚀`, '✨');
+    showToast(`Welcome aboard, ${finalName}`, 'check');
     if (onComplete) {
       onComplete();
     }
   };
 
-  return (
+  return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 999,
-      background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(12px)',
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 9999,
+      background: 'rgba(15, 23, 42, 0.85)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
+      overscrollBehavior: 'none',
+      touchAction: 'none',
     }}>
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: '32px',
-        width: '100%', maxWidth: '420px',
-        padding: '32px 28px',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
-        position: 'relative', overflow: 'hidden',
-        animation: 'slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-      }}>
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        onTouchMove={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '24px',
+          width: '100%', maxWidth: '420px',
+          padding: '28px 24px',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+          position: 'relative', overflow: 'hidden',
+          animation: 'slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }}
+      >
         {/* Progress Bar Top */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '28px' }}>
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '24px' }}>
           {[1, 2, 3].map((s) => (
             <div key={s} style={{
-              flex: 1, height: '6px', borderRadius: '99px',
+              flex: 1, height: '4px', borderRadius: '4px',
               background: s <= step ? 'var(--accent-sky)' : 'var(--glass-border)',
               transition: 'background 0.3s ease',
             }} />
@@ -247,21 +264,22 @@ export default function OnboardingModal({ onComplete }) {
               <button
                 onClick={() => setStep(2)}
                 className="btn btn-ghost"
-                style={{ borderRadius: '20px', padding: '16px 20px' }}
+                style={{ borderRadius: '14px', padding: '14px 20px' }}
               >
                 Back
               </button>
               <button
                 onClick={handleFinish}
                 className="btn btn-primary flex-1"
-                style={{ padding: '16px', borderRadius: '20px', fontSize: '16px' }}
+                style={{ padding: '14px', borderRadius: '14px', fontSize: '15px' }}
               >
-                Start Journey 🚀
+                Start Journey
               </button>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
