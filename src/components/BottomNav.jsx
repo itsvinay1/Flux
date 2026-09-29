@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   LayoutDashboard, Route, Timer, BrainCircuit, MoreHorizontal,
-  NotebookPen, GraduationCap, UsersRound, CircleUser, X
+  NotebookPen, GraduationCap, UsersRound, CircleUser, X, CheckSquare
 } from 'lucide-react';
 import { lockScroll, unlockScroll } from '../utils/scrollLock';
 
@@ -16,6 +16,7 @@ const PRIMARY_TABS = [
 
 // Tabs in the "More" bottom sheet
 const MORE_TABS = [
+  { id: 'todo',     label: 'Tasks',    Icon: CheckSquare,   desc: 'To-do list & tasks' },
   { id: 'journal',  label: 'Journal',  Icon: NotebookPen,   desc: 'Reflect on your day' },
   { id: 'syllabus', label: 'Study',    Icon: GraduationCap, desc: 'Syllabus tracker' },
   { id: 'tribe',    label: 'Tribe',    Icon: UsersRound,    desc: 'Leaderboard' },

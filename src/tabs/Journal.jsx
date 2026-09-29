@@ -239,10 +239,10 @@ export default function Journal() {
 
   return (
     <div className="tab-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', paddingTop: '12px' }}>
+      <div className="sticky-screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Journal</h1>
-          <p className="page-subtitle">Log your wins and thoughts.</p>
+          <h1 className="page-title" style={{ fontSize: '19px', fontWeight: 800 }}>Journal</h1>
+          <p className="page-subtitle" style={{ fontSize: '11px', margin: 0 }}>Log your wins and thoughts.</p>
         </div>
         <button
           id="btn-analyze-header"

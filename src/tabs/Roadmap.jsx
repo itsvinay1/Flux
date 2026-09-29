@@ -221,9 +221,9 @@ export default function Roadmap() {
         <CreateChallengeModal onClose={() => setShowCreateGoalModal(false)} />
       )}
 
-      <div className="page-header">
+      <div className="sticky-screen-header">
         <div>
-          <h1 className="page-title">Your Goals & Roadmaps</h1>
+          <h1 className="page-title">Your Goals &amp; Roadmaps</h1>
           <p className="page-subtitle">Conquer single or multiple goals simultaneously</p>
         </div>
       </div>

@@ -549,12 +549,27 @@ export default function SyllabusTracker() {
                                     >
                                       <div 
                                         onClick={() => toggleSubTopicComplete(currentCourse.id, currentSubject.id, chap.id, top.id, st.id)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '9px', cursor: 'pointer', flex: 1 }}
                                       >
                                         {st.completed ? (
-                                          <CheckSquare size={15} color="#0ea5e9" style={{ flexShrink: 0 }} />
+                                          <div style={{
+                                            width: 19, height: 19, borderRadius: 6,
+                                            background: 'linear-gradient(135deg, #0ea5e9, #10b981)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
+                                            flexShrink: 0,
+                                          }}>
+                                            <svg width={11} height={11} viewBox="0 0 13 13" fill="none">
+                                              <path d="M2.5 6.5L5.5 9.5L10.5 4" stroke="white" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                          </div>
                                         ) : (
-                                          <Square size={15} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                                          <div style={{
+                                            width: 19, height: 19, borderRadius: 6,
+                                            border: '1.5px solid var(--glass-border-bright, #cbd5e1)',
+                                            background: 'var(--bg-secondary)',
+                                            flexShrink: 0,
+                                          }} />
                                         )}
                                         <span style={{
                                           fontSize: '12px', fontWeight: 600,

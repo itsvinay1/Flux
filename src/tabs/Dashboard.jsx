@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Trophy, Zap, Play, BarChart2, Sparkles, Sun, Moon, Map, Share2, Plus, CheckSquare, Square, Trash2, Bot } from 'lucide-react';
+import { Flame, Trophy, Zap, Play, BarChart2, Sparkles, Sun, Moon, Map, Share2, Plus, CheckSquare, Square, Trash2, Quote } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -116,78 +116,103 @@ function UserHeader({ onNavigate, onShare }) {
   );
 }
 
-function AICoachCard() {
+function HypeMeCard() {
   const streak = useStore((s) => s.streak);
   const points = useStore((s) => s.points);
-  const [message, setMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = React.useState(() => getHypeMessage(streak, points));
+  const [loading, setLoading] = React.useState(false);
 
   const handleHype = () => {
     setLoading(true);
-    setMessage(null);
     setTimeout(() => {
       setMessage(getHypeMessage(streak, points));
       setLoading(false);
-    }, 950);
+    }, 700);
   };
 
   return (
-    <div className="card card-dark mb-16" style={{ padding: '24px' }}>
-      {/* Decorative blur blob */}
+    <div
+      style={{
+        width: '100%',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+        borderRadius: '20px',
+        padding: '22px 22px 20px',
+        marginBottom: '16px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(14,165,233,0.18)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
+      }}
+    >
+      {/* Subtle glow blob */}
       <div style={{
-        position: 'absolute', top: 0, right: 0,
-        width: 160, height: 160,
-        background: 'rgba(14,165,233,0.08)',
+        position: 'absolute', top: -30, right: -30,
+        width: 140, height: 140,
+        background: 'rgba(14,165,233,0.12)',
         borderRadius: '50%',
-        filter: 'blur(40px)',
-        transform: 'translate(30%, -30%)',
+        filter: 'blur(38px)',
         pointerEvents: 'none',
       }} />
 
-      <div className="flex items-center justify-between mb-16" style={{ position: 'relative', zIndex: 1 }}>
-        <h3 style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Bot size={17} style={{ color: '#38bdf8' }} />
-          AI Coach
-        </h3>
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 12,
+            background: 'rgba(14,165,233,0.18)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '1px solid rgba(14,165,233,0.3)',
+          }}>
+            <Quote size={16} color="#38bdf8" />
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#e2e8f0', fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.2px' }}>Hype Me Up</span>
+        </div>
         <button
           id="btn-hype-me"
           onClick={handleHype}
           disabled={loading}
           style={{
-            background: 'rgba(14,165,233,0.15)',
-            border: '1px solid rgba(14,165,233,0.25)',
+            background: loading ? 'rgba(14,165,233,0.08)' : 'rgba(14,165,233,0.18)',
+            border: '1px solid rgba(14,165,233,0.3)',
             color: '#38bdf8',
-            fontSize: '12px',
-            fontWeight: 700,
-            padding: '8px 16px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '6px',
+            fontSize: 11,
+            fontWeight: 800,
+            padding: '7px 14px',
+            borderRadius: 10,
+            cursor: loading ? 'default' : 'pointer',
+            display: 'flex', alignItems: 'center', gap: 5,
             fontFamily: 'Outfit, sans-serif',
             transition: 'all 0.2s ease',
-            flexShrink: 0,
           }}
         >
           {loading ? (
-            <span style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+            <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <span className="thinking-dot" />
               <span className="thinking-dot" />
               <span className="thinking-dot" />
             </span>
-          ) : 'Motivate Me'}
+          ) : 'New Quote'}
         </button>
       </div>
 
+      {/* Quote body */}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        {message ? (
-          <div className="ai-response-dark">
-            {message}
-          </div>
-        ) : (
-          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '14px', lineHeight: 1.6, fontWeight: 500 }}>
-            Get a personalized boost based on your streak and stats.
-          </p>
-        )}
+        <p style={{
+          fontSize: 14, lineHeight: 1.65, fontWeight: 500,
+          color: 'rgba(226,232,240,0.9)',
+          fontFamily: 'Outfit, sans-serif',
+          margin: 0,
+        }}>
+          {message}
+        </p>
+      </div>
+
+      {/* Streak badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, position: 'relative', zIndex: 1 }}>
+        <Flame size={13} color="#fb923c" fill="#fb923c" />
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', fontFamily: 'Outfit, sans-serif' }}>
+          {streak} day streak
+        </span>
       </div>
     </div>
   );
@@ -486,121 +511,121 @@ function FocusGraph() {
   );
 }
 
-function TodoSection() {
+function TodoSection({ onNavigate }) {
   const todos = useStore((s) => s.todos) || [];
-  const addTodo = useStore((s) => s.addTodo);
   const toggleTodo = useStore((s) => s.toggleTodo);
-  const deleteTodo = useStore((s) => s.deleteTodo);
-
-  const [inputTitle, setInputTitle] = useState('');
-  const [filter, setFilter] = useState('all');
-
-  const handleAdd = (e) => {
-    e.preventDefault();
-    if (!inputTitle.trim()) return;
-    addTodo(inputTitle.trim(), 'medium', 'General');
-    setInputTitle('');
-    showToast('Todo item added! 📝', '✨');
-  };
-
-  const filteredTodos = todos.filter((t) => {
-    if (filter === 'pending') return !t.completed;
-    if (filter === 'completed') return t.completed;
-    return true;
-  });
+  const pendingTodos = todos.filter((t) => !t.completed);
+  const completedCount = todos.filter((t) => t.completed).length;
 
   return (
-    <div className="card mb-16" style={{ padding: '22px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+    <div className="card mb-16" style={{ padding: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckSquare size={18} color="var(--accent-sky)" />
-          <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>Today's Todo List</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+            Today's Tasks
+          </h3>
         </div>
-        <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-secondary)', padding: '3px', borderRadius: '12px' }}>
-          {['all', 'pending', 'completed'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              style={{
-                fontSize: '10px', fontWeight: 700, padding: '4px 8px', borderRadius: '8px', border: 'none',
-                background: filter === f ? 'var(--bg-card)' : 'transparent',
-                color: filter === f ? 'var(--text-primary)' : 'var(--text-muted)',
-                cursor: 'pointer', textTransform: 'capitalize',
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-        <input
-          type="text"
-          placeholder="Add a new task..."
-          value={inputTitle}
-          onChange={(e) => setInputTitle(e.target.value)}
-          style={{
-            flex: 1, padding: '10px 14px', borderRadius: '12px',
-            background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
-            color: 'var(--text-primary)', fontSize: '13px', outline: 'none',
-            fontFamily: 'Outfit, sans-serif',
-          }}
-        />
         <button
-          type="submit"
-          disabled={!inputTitle.trim()}
+          onClick={() => onNavigate && onNavigate('todo')}
           style={{
-            padding: '10px 16px', borderRadius: '12px',
-            background: 'var(--accent-sky)', color: '#fff', border: 'none',
-            fontWeight: 800, fontSize: '13px', cursor: 'pointer',
-            opacity: inputTitle.trim() ? 1 : 0.5,
+            background: 'rgba(14,165,233,0.1)',
+            border: 'none',
+            color: 'var(--accent-sky)',
+            fontSize: '12px',
+            fontWeight: 700,
+            padding: '5px 12px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontFamily: 'Outfit, sans-serif'
           }}
         >
-          Add
+          View All ({todos.length})
         </button>
-      </form>
+      </div>
 
-      {/* List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {filteredTodos.length === 0 ? (
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-            No todos found for this view.
-          </p>
-        ) : (
-          filteredTodos.map((todo) => (
+      {todos.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '13px', margin: '0 0 10px 0', fontWeight: 500 }}>No tasks added yet for today.</p>
+          <button
+            onClick={() => onNavigate && onNavigate('todo')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '12px',
+              background: 'var(--accent-sky)',
+              color: '#fff',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            Create First Task
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {todos.slice(0, 3).map((todo) => (
             <div
               key={todo.id}
+              onClick={() => toggleTodo(todo.id)}
               style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 12px', borderRadius: '12px',
-                background: todo.completed ? 'rgba(14, 165, 233, 0.06)' : 'var(--bg-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                borderRadius: '12px',
+                background: todo.completed ? 'rgba(14, 165, 233, 0.05)' : 'var(--bg-secondary)',
                 border: `1px solid ${todo.completed ? 'rgba(14, 165, 233, 0.2)' : 'var(--glass-border)'}`,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
               }}
             >
-              <div 
-                onClick={() => toggleTodo(todo.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1 }}
-              >
-                {todo.completed ? <CheckSquare size={18} color="#0ea5e9" /> : <Square size={18} color="var(--text-muted)" />}
-                <span style={{
-                  fontSize: '13px', fontWeight: 600,
-                  color: todo.completed ? 'var(--text-muted)' : 'var(--text-primary)',
-                  textDecoration: todo.completed ? 'line-through' : 'none',
+              {todo.completed ? (
+                <div style={{
+                  width: 20, height: 20, borderRadius: 6,
+                  background: 'linear-gradient(135deg, #0ea5e9, #10b981)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}>
-                  {todo.title}
-                </span>
-              </div>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                style={{ background: 'none', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer' }}
-              >
-                <Trash2 size={14} />
-              </button>
+                  <svg width={11} height={11} viewBox="0 0 13 13" fill="none">
+                    <path d="M2.5 6.5L5.5 9.5L10.5 4" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              ) : (
+                <Square size={18} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+              )}
+              <span style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: todo.completed ? 'var(--text-muted)' : 'var(--text-primary)',
+                textDecoration: todo.completed ? 'line-through' : 'none',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1
+              }}>
+                {todo.title}
+              </span>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+
+          {todos.length > 3 && (
+            <div
+              onClick={() => onNavigate && onNavigate('todo')}
+              style={{
+                textAlign: 'center',
+                padding: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              + {todos.length - 3} more tasks
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -620,10 +645,10 @@ export default function Dashboard({ onNavigate }) {
       )}
 
       <UserHeader onNavigate={onNavigate} onShare={() => setShowShareModal(true)} />
-      <AICoachCard />
+      <HypeMeCard />
       <StatsRow />
       <ChallengeCard onNavigate={onNavigate} onCreateGoal={() => setShowCreateGoalModal(true)} />
-      <TodoSection />
+      <TodoSection onNavigate={onNavigate} />
       <FocusGraph />
       <div style={{ marginTop: '16px' }}>
         <ConsistencyHeatmap focusSessions={focusSessions} />

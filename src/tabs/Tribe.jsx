@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Flame, Crown, Users, Plus, Copy, Sparkles,
-  Trophy, RefreshCw, Wifi, WifiOff, ChevronRight
+  Trophy, RefreshCw, Wifi, WifiOff, ChevronRight, BarChart2
 } from 'lucide-react';
 import {
   collection, onSnapshot, doc, setDoc, serverTimestamp, query, orderBy, limit
@@ -333,16 +333,16 @@ export default function Tribe({ onNavigate }) {
       )}
 
       {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingTop: 12 }}>
+      <div className="sticky-screen-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="page-title">The Tribe</h1>
-          <p className="page-subtitle">Real-time rankings & community goals</p>
+          <h1 className="page-title" style={{ fontSize: '19px', fontWeight: 800 }}>The Tribe</h1>
+          <p className="page-subtitle" style={{ fontSize: '11px', margin: 0 }}>Real-time rankings &amp; community goals</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          style={{ padding: '10px 16px', background: 'var(--accent-sky)', color: '#fff', border: 'none', borderRadius: 16, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Outfit, sans-serif', boxShadow: 'var(--shadow-button-sky)' }}
+          style={{ padding: '8px 14px', background: 'var(--accent-sky)', color: '#fff', border: 'none', borderRadius: 14, fontWeight: 700, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Outfit, sans-serif', boxShadow: 'var(--shadow-button-sky)' }}
         >
-          <Plus size={16} /> New Goal
+          <Plus size={15} /> New Goal
         </button>
       </div>
 

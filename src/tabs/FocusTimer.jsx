@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, Pause, RotateCcw, Plus, CheckCircle, Lock, Settings2, Volume2, CloudRain, Zap, Radio, Music, Upload, Trophy } from 'lucide-react';
+import { Play, Pause, RotateCcw, Plus, CheckCircle, Lock, Settings2, Volume2, CloudRain, Zap, Radio, Music2, Trophy } from 'lucide-react';
 import useStore from '../store/useStore';
 import { showToast } from '../components/Toast';
 import { audioEngine } from '../utils/ambientAudio';
@@ -12,6 +12,16 @@ const MODES = [
   { id: 'short', label: 'Break', minutes: 5 },
 ];
 
+// Built-in focus tracks
+const FOCUS_TRACKS = [
+  { id: 'off',     label: 'Off',       src: null,                icon: 'off'   },
+  { id: 'track1',  label: 'Focus 1',   src: '/audio/focus_1.mp3', icon: 'music' },
+  { id: 'track2',  label: 'Focus 2',   src: '/audio/focus_2.mp3', icon: 'music' },
+  { id: 'track3',  label: 'Focus 3',   src: '/audio/focus_3.mp3', icon: 'music' },
+  { id: 'track4',  label: 'Focus 4',   src: '/audio/focus_4.mp3', icon: 'music' },
+  { id: 'track5',  label: 'Focus 5',   src: '/audio/focus_5.mp3', icon: 'music' },
+];
+
 function CircularTimer({ progress, seconds, isRunning }) {
   const size = 310;
   const strokeWidth = 16;
@@ -19,7 +29,6 @@ function CircularTimer({ progress, seconds, isRunning }) {
   const circumference = radius * 2 * Math.PI;
   const dashOffset = circumference - (progress / 100) * circumference;
 
-  // Format into Day, Hour, Minute, Second
   const days = Math.floor(seconds / (24 * 3600));
   const hours = Math.floor((seconds % (24 * 3600)) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -30,7 +39,6 @@ function CircularTimer({ progress, seconds, isRunning }) {
 
   return (
     <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
-      {/* Pulse rings when active */}
       {isRunning && (
         <>
           <div style={{
@@ -50,7 +58,6 @@ function CircularTimer({ progress, seconds, isRunning }) {
         </>
       )}
 
-      {/* Comfy White/Card circular base */}
       <div style={{
         position: 'absolute', inset: 0,
         borderRadius: '50%',
@@ -59,19 +66,16 @@ function CircularTimer({ progress, seconds, isRunning }) {
         border: '1px solid var(--glass-border)',
       }} />
 
-      {/* SVG Progress Ring */}
       <svg
         width={size} height={size}
         style={{ position: 'absolute', transform: 'rotate(-90deg)' }}
       >
-        {/* Track */}
         <circle
           cx={size / 2} cy={size / 2} r={radius}
           fill="none"
           stroke="var(--bg-secondary)"
           strokeWidth={strokeWidth}
         />
-        {/* Progress */}
         <circle
           cx={size / 2} cy={size / 2} r={radius}
           fill="none"
@@ -84,75 +88,36 @@ function CircularTimer({ progress, seconds, isRunning }) {
         />
       </svg>
 
-      {/* Center Comfy Timer Display (Day, Hour, Min, Sec) */}
       <div style={{
         position: 'absolute', inset: 0,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         zIndex: 2, padding: '20px',
       }}>
-        {/* Large Format Time */}
         <div style={{
           display: 'flex', alignItems: 'baseline', justify: 'center', gap: '4px',
           fontFamily: 'Outfit, sans-serif', fontWeight: 900, color: 'var(--text-primary)',
           letterSpacing: '-1.5px', lineHeight: 1,
         }}>
           {showDays && (
-            <div style={{ display: 'flex', flexDir: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '32px' }}>{String(days).padStart(2, '0')}</span>
-              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>d</span>
-            </div>
+            <><span style={{ fontSize: '52px' }}>{String(days).padStart(2, '0')}</span><span style={{ fontSize: '22px', opacity: 0.5, marginRight: '4px' }}>d</span></>
           )}
-          {showDays && <span style={{ fontSize: '24px', color: 'var(--text-muted)' }}>:</span>}
-
           {showHours && (
-            <div style={{ display: 'flex', flexDir: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: showDays ? '32px' : '42px' }}>{String(hours).padStart(2, '0')}</span>
-              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>h</span>
-            </div>
+            <><span style={{ fontSize: '52px' }}>{String(hours).padStart(2, '0')}</span><span style={{ fontSize: '22px', opacity: 0.5, marginRight: '4px' }}>h</span></>
           )}
-          {showHours && <span style={{ fontSize: showDays ? '24px' : '32px', color: 'var(--text-muted)' }}>:</span>}
-
-          <div style={{ display: 'flex', flexDir: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: showHours ? '40px' : '54px' }}>{String(minutes).padStart(2, '0')}</span>
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>m</span>
-          </div>
-          <span style={{ fontSize: showHours ? '28px' : '38px', color: 'var(--text-muted)' }}>:</span>
-
-          <div style={{ display: 'flex', flexDir: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: showHours ? '40px' : '54px', color: 'var(--accent-sky)' }}>{String(secs).padStart(2, '0')}</span>
-            <span style={{ fontSize: '10px', color: 'var(--accent-sky)', textTransform: 'uppercase', letterSpacing: '1px' }}>s</span>
-          </div>
+          <span style={{ fontSize: showHours ? '46px' : '64px' }}>{String(minutes).padStart(2, '0')}</span>
+          <span style={{ fontSize: '22px', opacity: 0.5, margin: '0 2px' }}>:</span>
+          <span style={{ fontSize: showHours ? '46px' : '64px' }}>{String(secs).padStart(2, '0')}</span>
         </div>
-
-        {/* Status Badge */}
-        <div style={{
-          marginTop: '16px',
-          fontSize: '11px',
-          fontWeight: 800,
-          textTransform: 'uppercase',
-          letterSpacing: '2px',
-          padding: '5px 14px',
-          borderRadius: '6px',
-          background: isRunning ? 'rgba(14, 165, 233, 0.12)' : 'var(--bg-secondary)',
+        <span style={{
+          marginTop: '12px', fontSize: '11px', fontWeight: 700,
           color: isRunning ? 'var(--accent-sky)' : 'var(--text-muted)',
-          transition: 'all 0.3s ease',
+          letterSpacing: '1.5px', textTransform: 'uppercase',
+          fontFamily: 'Outfit, sans-serif',
         }}>
-          {isRunning ? 'Active Focus' : 'Paused'}
-        </div>
+          {isRunning ? 'In Focus' : 'Ready'}
+        </span>
       </div>
-
-      {/* Lock Badge */}
-      {isRunning && (
-        <div style={{
-          position: 'absolute', top: 0, right: 12,
-          background: 'var(--bg-card)', borderRadius: '16px', padding: '10px',
-          boxShadow: 'var(--shadow-card)', border: '1px solid var(--glass-border)',
-          animation: 'bounce 1s ease infinite alternate',
-        }}>
-          <Lock size={20} color="#f43f5e" />
-        </div>
-      )}
     </div>
   );
 }
@@ -160,18 +125,17 @@ function CircularTimer({ progress, seconds, isRunning }) {
 export default function FocusTimer() {
   const addFocusSession = useStore((s) => s.addFocusSession);
   const incrementDistraction = useStore((s) => s.incrementDistraction);
-  const currentDistractions = useStore((s) => s.currentSessionDistractions);
   const resetDistraction = useStore((s) => s.resetDistraction);
+  const currentDistractions = useStore((s) => s.currentDistractions);
+  const isPremium = useStore((s) => s.isPremium);
 
   const [selectedMode, setSelectedMode] = useState(0);
   const [customDays, setCustomDays] = useState(0);
   const [customHours, setCustomHours] = useState(0);
-  const [customMins, setCustomMins] = useState(45);
+  const [customMins, setCustomMins] = useState(25);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeSound, setActiveSound] = useState('off');
-  const [customTrack, setCustomTrack] = useState(null); // { url, name }
-  const customAudioRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     if (showCustomModal) {
@@ -181,19 +145,6 @@ export default function FocusTimer() {
     }
     return () => unlockScroll();
   }, [showCustomModal]);
-
-  const handleCustomAudioUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const url = URL.createObjectURL(file);
-      setCustomTrack({ url, name: file.name });
-      setActiveSound('custom');
-      showToast(`Loaded "${file.name}"`, 'check');
-    } catch (err) {
-      showToast('Could not load audio file', 'alert');
-    }
-  };
 
   const [secondsLeft, setSecondsLeft] = useState(MODES[0].minutes * 60);
   const [totalSeconds, setTotalSeconds] = useState(MODES[0].minutes * 60);
@@ -241,7 +192,10 @@ export default function FocusTimer() {
     try {
       setIsRunning(false);
       setSessionComplete(true);
-      if (customAudioRef.current) customAudioRef.current.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       const minsCompleted = Math.max(1, Math.round(totalSeconds / 60));
       addFocusSession(minsCompleted, currentDistractions);
       showToast(`Session complete! +${minsCompleted} points earned`, 'success');
@@ -263,9 +217,9 @@ export default function FocusTimer() {
       resetDistraction();
       if (intervalRef.current) clearInterval(intervalRef.current);
       audioEngine.stopAll();
-      if (customAudioRef.current) {
-        customAudioRef.current.pause();
-        customAudioRef.current.currentTime = 0;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
       }
     } catch (err) {
       console.warn('[FocusTimer] Reset notice:', err);
@@ -282,38 +236,56 @@ export default function FocusTimer() {
   useEffect(() => {
     try {
       audioEngine.setMasterVolume(volume);
-      if (customAudioRef.current) {
-        customAudioRef.current.volume = volume;
+      if (audioRef.current) {
+        audioRef.current.volume = volume;
       }
     } catch (e) {}
   }, [volume]);
 
+  // Switch track when selection changes
+  useEffect(() => {
+    const track = FOCUS_TRACKS.find((t) => t.id === activeSound);
+    if (!track || !track.src) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      audioEngine.stopAll();
+      return;
+    }
+    if (audioRef.current) {
+      audioRef.current.src = track.src;
+      audioRef.current.volume = volume;
+      audioRef.current.loop = true;
+      if (isRunning) {
+        audioRef.current.play().catch(() => {});
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSound]);
+
   useEffect(() => {
     if (isRunning) {
       try {
-        if (activeSound === 'meditation') audioEngine.playTanpuraMeditation();
-        if (activeSound === 'study') audioEngine.playStudyBrownNoise();
-        if (activeSound === 'flute') audioEngine.playFlute();
-        if (activeSound === 'lofi') audioEngine.playLofi();
-        if (activeSound === 'rain') audioEngine.playRain();
-        if (activeSound === 'custom' && customAudioRef.current) {
-          customAudioRef.current.currentTime = 0;
-          customAudioRef.current.play().catch(() => {});
+        const track = FOCUS_TRACKS.find((t) => t.id === activeSound);
+        if (track && track.src && audioRef.current) {
+          audioRef.current.volume = volume;
+          audioRef.current.play().catch(() => {});
         }
       } catch (e) {}
 
       intervalRef.current = setInterval(() => {
         setSecondsLeft((prev) => {
-          if (prev <= 1) { 
-            if (intervalRef.current) clearInterval(intervalRef.current); 
+          if (prev <= 1) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
             setTimeout(() => {
               try {
-                audioEngine.stopAll(); 
-                if (customAudioRef.current) customAudioRef.current.pause();
-                handleComplete(); 
+                audioEngine.stopAll();
+                if (audioRef.current) audioRef.current.pause();
+                handleComplete();
               } catch (e) {}
             }, 0);
-            return 0; 
+            return 0;
           }
           return prev - 1;
         });
@@ -321,29 +293,20 @@ export default function FocusTimer() {
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
       try { audioEngine.stopAll(); } catch (e) {}
-      if (customAudioRef.current) customAudioRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
     }
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       try { audioEngine.stopAll(); } catch (e) {}
-      if (customAudioRef.current) customAudioRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
     };
   }, [isRunning, activeSound, handleComplete]);
 
   return (
     <div className="tab-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '120px' }}>
-      {/* Hidden Audio and File Input Elements for Custom Audio */}
-      {customTrack?.url && (
-        <audio ref={customAudioRef} src={customTrack.url} loop preload="auto" />
-      )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="audio/*"
-        style={{ display: 'none' }}
-        onChange={handleCustomAudioUpload}
-      />
+      {/* Single shared audio element for built-in tracks */}
+      <audio ref={audioRef} preload="auto" />
 
       <div className="sticky-screen-header" style={{ width: '100%' }}>
         <div>
@@ -558,11 +521,11 @@ export default function FocusTimer() {
         </button>
       </div>
 
-      {/* Ambient Focus Sound Engine (Synthesized Offline Audio) */}
+      {/* Focus Music - Built-in Tracks */}
       <div className="card" style={{ width: '100%', padding: '18px 20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            <Volume2 size={16} color="var(--accent-sky)" /> Ambient Focus &amp; Meditation Audio
+            <Volume2 size={16} color="var(--accent-sky)" /> Focus Music
           </div>
           <span style={{ fontSize: '10px', background: 'rgba(14,165,233,0.1)', color: '#0284c7', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
             100% Offline
@@ -586,47 +549,21 @@ export default function FocusTimer() {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-          {[
-            { id: 'off', label: 'Off', icon: <Volume2 size={13} /> },
-            { id: 'meditation', label: 'Om', icon: <Zap size={13} /> },
-            { id: 'study', label: 'Study', icon: <Zap size={13} /> },
-            { id: 'flute', label: 'Flute', icon: <Radio size={13} /> },
-            { id: 'lofi', label: 'Lo-Fi', icon: <Zap size={13} /> },
-            { id: 'rain', label: 'Rain', icon: <CloudRain size={13} /> },
-            { id: 'custom', label: 'My Audio', icon: <Music size={13} /> },
-          ].map((snd) => {
-            const isActive = activeSound === snd.id;
+        {/* Track selector - 6 buttons: Off + 5 tracks */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
+          {FOCUS_TRACKS.map((trk) => {
+            const isActive = activeSound === trk.id;
             return (
               <button
-                key={snd.id}
+                key={trk.id}
                 onClick={() => {
-                  if (snd.id === 'custom') {
-                    if (!customTrack) {
-                      fileInputRef.current?.click();
-                      return;
-                    }
-                  }
-                  setActiveSound(snd.id);
-                  if (isRunning) {
-                    audioEngine.stopAll();
-                    if (customAudioRef.current) customAudioRef.current.pause();
-                    if (snd.id === 'meditation') audioEngine.playTanpuraMeditation();
-                    if (snd.id === 'study') audioEngine.playStudyBrownNoise();
-                    if (snd.id === 'flute') audioEngine.playFlute();
-                    if (snd.id === 'lofi') audioEngine.playLofi();
-                    if (snd.id === 'rain') audioEngine.playRain();
-                    if (snd.id === 'custom' && customAudioRef.current) {
-                      customAudioRef.current.currentTime = 0;
-                      customAudioRef.current.play().catch(() => {});
-                    }
-                  }
-                  if (snd.id !== 'off') {
-                    showToast(isRunning ? `Playing ${snd.label}` : `Selected ${snd.label}`, 'info');
+                  setActiveSound(trk.id);
+                  if (trk.id !== 'off') {
+                    showToast(isRunning ? `Playing ${trk.label}` : `Selected ${trk.label}`, 'info');
                   }
                 }}
                 style={{
-                  padding: '8px 2px',
+                  padding: '10px 2px',
                   borderRadius: '12px',
                   border: `1.5px solid ${isActive ? 'var(--accent-sky)' : 'var(--glass-border)'}`,
                   background: isActive ? 'rgba(14,165,233,0.1)' : 'var(--bg-card)',
@@ -634,42 +571,17 @@ export default function FocusTimer() {
                   fontWeight: 700,
                   fontSize: '9px',
                   cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
                   transition: 'all 0.2s ease',
+                  fontFamily: 'Outfit, sans-serif',
                 }}
               >
-                {snd.icon}
-                {snd.label}
+                {trk.id === 'off' ? <Volume2 size={14} /> : <Music2 size={14} />}
+                {trk.label}
               </button>
             );
           })}
         </div>
-
-        {/* Custom Audio Upload / Selected Banner */}
-        {activeSound === 'custom' && (
-          <div style={{
-            marginTop: '12px', padding: '10px 14px', borderRadius: '14px',
-            background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <Music size={15} color="var(--accent-sky)" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {customTrack ? customTrack.name : 'No file selected yet'}
-              </span>
-            </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                fontSize: '11px', fontWeight: 800, color: 'var(--accent-sky)',
-                background: 'rgba(14,165,233,0.1)', padding: '5px 10px', borderRadius: '8px',
-                border: 'none', cursor: 'pointer', flexShrink: 0,
-              }}
-            >
-              {customTrack ? 'Change' : 'Choose File'}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Session Complete Card */}
@@ -680,7 +592,7 @@ export default function FocusTimer() {
           </div>
           <div style={{ fontWeight: 800, fontSize: '20px', color: 'var(--text-primary)', marginBottom: '6px' }}>Session Complete!</div>
           <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px', fontWeight: 500 }}>
-            <strong style={{ color: '#059669' }}>+{Math.round(totalSeconds/60)} pts</strong> earned •{' '}
+            <strong style={{ color: '#059669' }}>+{Math.round(totalSeconds/60)} pts</strong> earned &bull;{' '}
             {currentDistractions === 0 ? 'Zero distractions logged' : `${currentDistractions} distractions logged`}
           </div>
           <button

@@ -505,9 +505,9 @@ export default function Profile() {
       {showTos && <TermsOfServiceModal onClose={() => setShowTos(false)} />}
 
       {/* ── Header ── */}
-      <div style={{ paddingTop: '12px', marginBottom: '24px' }}>
-        <h1 className="page-title">My Profile</h1>
-        <p className="page-subtitle">Your journey, your data, your rules.</p>
+      <div className="sticky-screen-header">
+        <h1 className="page-title" style={{ fontSize: '19px', fontWeight: 800 }}>My Profile</h1>
+        <p className="page-subtitle" style={{ fontSize: '11px', margin: 0 }}>Your journey, your data, your rules</p>
       </div>
 
       {/* ── Sync Status ── */}
