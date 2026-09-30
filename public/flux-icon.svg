@@ -2,53 +2,40 @@
   <defs>
     <!-- Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="50%" stop-color="#0f2444" />
-      <stop offset="100%" stop-color="#0369a1" />
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#0f172a" />
     </linearGradient>
 
-    <!-- Bolt Glow / Shimmer Gradient -->
-    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Top Stem & Bar Gradient -->
+    <linearGradient id="fTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="60%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+
+    <!-- Lower Horizontal Bar Gradient -->
+    <linearGradient id="fBottomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
       <stop offset="100%" stop-color="#0284c7" />
     </linearGradient>
 
-    <!-- Accent Ring Gradient -->
-    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9" />
-      <stop offset="50%" stop-color="#10b981" stop-opacity="0.8" />
-      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.3" />
-    </linearGradient>
-
-    <!-- Inner Shadow / Glow Filter -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    <!-- Inner Drop Shadow for Layering -->
+    <filter id="layerShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.45" />
     </filter>
   </defs>
 
-  <!-- Base Rounded Squircle Background -->
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  <!-- Squircle Base -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad)" />
 
-  <!-- Outer Ambient Glow Ring -->
-  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#ringGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="800 300" opacity="0.85" />
+  <!-- Subtle Rim Glow Border -->
+  <rect width="510" height="510" x="1" y="1" rx="119" fill="none" stroke="rgba(56, 189, 248, 0.15)" stroke-width="2" />
 
-  <!-- Inner Focus Orbit Dots -->
-  <circle cx="256" cy="66" r="8" fill="#38bdf8" />
-  <circle cx="446" cy="256" r="6" fill="#34d399" />
-  <circle cx="256" cy="446" r="6" fill="#0ea5e9" opacity="0.6" />
-  <circle cx="66" cy="256" r="6" fill="#38bdf8" opacity="0.6" />
+  <!-- Geometric Layer 1: Top Bar & Full Vertical Pillar -->
+  <path d="M 176 128 C 153.9 128 136 145.9 136 168 L 136 364 C 136 377.3 146.7 388 160 388 L 184 388 C 197.3 388 208 377.3 208 364 L 208 196 L 360 196 C 368.8 196 376 188.8 376 180 L 376 144 C 376 135.2 368.8 128 360 128 Z"
+        fill="url(#fTopGrad)" />
 
-  <!-- Dynamic Precision Focus Lightning / FLUX Symbol -->
-  <path d="M 288 88 L 168 256 L 256 256 L 224 424 L 344 256 L 256 256 Z" 
-        fill="url(#boltGrad)" 
-        filter="url(#glow)"
-        stroke="#ffffff"
-        stroke-width="4"
-        stroke-linejoin="round"
-        stroke-linecap="round" />
-
-  <!-- Central Energy Core Highlight -->
-  <circle cx="256" cy="256" r="10" fill="#ffffff" opacity="0.9" filter="url(#glow)" />
+  <!-- Geometric Layer 2: Precision Chamfered Crossbar (Overlapping with Depth) -->
+  <path d="M 136 228 L 312 228 C 320.8 228 328 235.2 328 244 L 328 276 C 328 284.8 320.8 292 312 292 L 208 292 L 208 316 L 136 316 Z"
+        fill="url(#fBottomGrad)"
+        filter="url(#layerShadow)" />
 </svg>

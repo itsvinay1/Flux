@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Flame, Crown, Users, Plus, Copy, Sparkles,
-  Trophy, RefreshCw, Wifi, WifiOff, ChevronRight, BarChart2
+  Trophy, RefreshCw, Wifi, WifiOff, ChevronRight, BarChart2, Route
 } from 'lucide-react';
 import {
   collection, onSnapshot, doc, setDoc, serverTimestamp, query, orderBy, limit
