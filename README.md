@@ -11,7 +11,7 @@
 
 **FLUX** is an offline-first daily focus, habit building, syllabus tracking, and exam productivity application designed specifically for serious students and self-learners (GATE, NEET, JEE, UPSC, Boards).
 
-### 📱 [📥 Download Android SIGNED APK (v1.0.28)](docs/releases/FLUX-v1.0.28-Signed.apk)
+### 📱 [📥 Download Android SIGNED APK (v1.0.29)](docs/releases/FLUX-v1.0.29-Signed.apk)
 
 [Download APK](#-download-android-signed-apk) • [Features](#-key-features) • [Screenshots](#-authentic-app-screens-showcase) • [Architecture](#-architecture--tech-stack) • [Installation](#-getting-started) • [Security](#-security--privacy-architecture)
 
@@ -23,7 +23,7 @@
 
 Download the fully signed, installable Android APK directly from the repository:
 
-- 📦 **Latest Production Release**: [`FLUX-v1.0.28-Signed.apk`](docs/releases/FLUX-v1.0.28-Signed.apk) *(Signed APK - Installs on any Android device)*
+- 📦 **Latest Production Release**: [`FLUX-v1.0.29-Signed.apk`](docs/releases/FLUX-v1.0.29-Signed.apk) *(Signed APK - Installs on any Android device)*
 - 🔒 **Signing Verification**: Digitally signed with Android v1+v2 APK signature scheme, enabling direct 1-tap installation on Android without "App not installed" errors.
 - 📱 **Compatibility**: Android 8.0+ (API 26 and above).
 
