@@ -14,6 +14,7 @@ import RenderAvatar from '../components/Avatar';
 import PrivacyPolicyModal from '../components/PrivacyPolicy';
 import TermsOfServiceModal from '../components/TermsOfService';
 import { lockScroll, unlockScroll } from '../utils/scrollLock';
+import { deleteRemoteUserData } from '../auth/authService.js';
 
 const AVATAR_OPTIONS = ['⚡', '🚀', '🔥', '🧠', '💎', '🦁', '🌊', '⭐', '🎯', '💪', '🦅', '🌿'];
 
@@ -132,7 +133,7 @@ function EditProfileModal({ onClose }) {
 }
 
 // ─── Delete Confirm Modal ─────────────────────────────────────────────────────
-function DeleteModal({ onClose, onConfirm }) {
+function DeleteModal({ onClose, onConfirm, deleting }) {
   useEffect(() => {
     lockScroll();
     return () => unlockScroll();
@@ -154,7 +155,7 @@ function DeleteModal({ onClose, onConfirm }) {
         overscrollBehavior: 'none',
         touchAction: 'none',
       }}
-      onClick={onClose}
+      onClick={deleting ? undefined : onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -181,23 +182,32 @@ function DeleteModal({ onClose, onConfirm }) {
           Delete Everything?
         </h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, fontWeight: 500, marginBottom: '22px' }}>
-          This will permanently erase all streaks, focus sessions, journal entries, and progress from this device.
+          This will permanently erase your account, cloud backups, focus sessions, journal entries, and progress.
         </p>
-        <button onClick={onConfirm} style={{
-          width: '100%', padding: '13px', marginBottom: '10px',
-          background: '#ef4444', color: '#fff', border: 'none',
-          borderRadius: '14px', fontWeight: 700, fontSize: '14px',
-          cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-          boxShadow: '0 4px 16px rgba(239,68,68,0.3)',
-        }}>
-          Yes, Delete My Data
+        <button
+          onClick={onConfirm}
+          disabled={deleting}
+          style={{
+            width: '100%', padding: '13px', marginBottom: '10px',
+            background: '#ef4444', color: '#fff', border: 'none',
+            borderRadius: '14px', fontWeight: 700, fontSize: '14px',
+            cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'Outfit, sans-serif',
+            boxShadow: '0 4px 16px rgba(239,68,68,0.3)',
+            opacity: deleting ? 0.7 : 1,
+          }}
+        >
+          {deleting ? 'Deleting on server...' : 'Yes, Delete My Data'}
         </button>
-        <button onClick={onClose} style={{
-          width: '100%', padding: '13px',
-          background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none',
-          borderRadius: '14px', fontWeight: 700, fontSize: '14px',
-          cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
-        }}>
+        <button
+          onClick={onClose}
+          disabled={deleting}
+          style={{
+            width: '100%', padding: '13px',
+            background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none',
+            borderRadius: '14px', fontWeight: 700, fontSize: '14px',
+            cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'Outfit, sans-serif',
+          }}
+        >
           Cancel
         </button>
       </div>
@@ -214,19 +224,45 @@ function SyncStatusBar() {
   const lastSyncedAt = useNetworkStore((s) => s.lastSyncedAt);
   const isAuthenticated = useStore((s) => s.isAuthenticated);
 
+  const formattedTime = lastSyncedAt
+    ? new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
   const statusConfig = {
-    synced:  { 
-      color: isAuthenticated ? '#10b981' : '#64748b', 
-      bg: isAuthenticated ? '#ecfdf5' : 'rgba(255,255,255,0.04)', 
-      icon: <Wifi size={14} />,       
-      label: isAuthenticated ? 'All data backed up' : 'Guest mode — local only (sign in to sync)' 
+    local_only: {
+      color: '#94a3b8',
+      bg: 'rgba(255,255,255,0.04)',
+      icon: <WifiOff size={14} />,
+      label: 'Local only',
     },
-    syncing: { color: '#0ea5e9', bg: '#e0f2fe', icon: <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />, label: 'Syncing...' },
-    pending: { color: '#f59e0b', bg: '#fffbeb', icon: <WifiOff size={14} />,     label: `${pendingChanges} changes pending` },
-    error:   { color: '#ef4444', bg: '#fef2f2', icon: <WifiOff size={14} />,     label: 'Sync error - will retry' },
+    synced: {
+      color: isAuthenticated ? '#10b981' : '#94a3b8',
+      bg: isAuthenticated ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.04)',
+      icon: <Wifi size={14} />,
+      label: isAuthenticated ? `Synced at ${formattedTime}` : 'Local only',
+    },
+    syncing: {
+      color: '#0ea5e9',
+      bg: 'rgba(14, 165, 233, 0.1)',
+      icon: <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />,
+      label: 'Syncing...',
+    },
+    pending: {
+      color: '#f59e0b',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      icon: <RefreshCw size={14} />,
+      label: 'Syncing...',
+    },
+    error: {
+      color: '#ef4444',
+      bg: 'rgba(239, 68, 68, 0.1)',
+      icon: <WifiOff size={14} />,
+      label: 'Sync failed, retrying',
+    },
   };
 
-  const cfg = statusConfig[syncStatus] || statusConfig.synced;
+  const activeKey = !isAuthenticated ? 'local_only' : (syncStatus || 'synced');
+  const cfg = statusConfig[activeKey] || statusConfig.synced;
 
   return (
     <div style={{
@@ -485,8 +521,29 @@ export default function Profile() {
 
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTos, setShowTos] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      if (isAuthenticated && userId && !userId.startsWith('guest_')) {
+        await deleteRemoteUserData(userId);
+      }
+      clearAllData();
+      ['flux-sync-queue', 'flux-ai-cache', 'flux-ai-rates', 'flux-onboarding-done'].forEach((k) => {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
+      setShowDelete(false);
+      showToast('All your data and account have been deleted.', 'success');
+    } catch (err) {
+      console.error('[Profile] Delete account error:', err);
+      showToast('Could not delete on the server. Your data is still here. Try again.', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const level = getLevel();
   const levelName = getLevelName();
@@ -504,7 +561,8 @@ export default function Profile() {
       {showDelete && (
         <DeleteModal
           onClose={() => setShowDelete(false)}
-          onConfirm={() => { clearAllData(); }}
+          onConfirm={handleDeleteAccount}
+          deleting={deleting}
         />
       )}
       {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
@@ -617,13 +675,18 @@ export default function Profile() {
             },
             {
               icon: <RefreshCw size={18} />,
-              label: pendingChanges > 0 ? `${pendingChanges} changes waiting to sync` : 'All data backed up',
+              label: !isAuthenticated ? 'Cloud Sync' : (pendingChanges > 0 ? `${pendingChanges} changes waiting to sync` : 'Cloud Sync'),
               right: (
-                <span style={{ fontSize: '11px', background: pendingChanges > 0 ? '#fffbeb' : '#ecfdf5', color: pendingChanges > 0 ? '#d97706' : '#059669', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
-                  {pendingChanges > 0 ? 'Pending' : 'Synced'}
+                <span style={{
+                  fontSize: '11px',
+                  background: !isAuthenticated ? 'rgba(255,255,255,0.06)' : (pendingChanges > 0 ? '#fffbeb' : '#ecfdf5'),
+                  color: !isAuthenticated ? '#94a3b8' : (pendingChanges > 0 ? '#d97706' : '#059669'),
+                  padding: '3px 8px', borderRadius: 6, fontWeight: 700
+                }}>
+                  {!isAuthenticated ? 'Local only' : (pendingChanges > 0 ? 'Syncing...' : 'Synced')}
                 </span>
               ),
-              onClick: () => showToast('Sync happens automatically when online', 'info'),
+              onClick: () => showToast(!isAuthenticated ? 'Sign in to sync your data to the cloud' : 'Sync happens automatically when online', 'info'),
             },
           ]}
         />

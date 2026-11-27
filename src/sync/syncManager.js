@@ -100,17 +100,21 @@ let isFlushing = false;
 export async function writeToFirebase(collectionName, docId, data) {
   try {
     const uid = auth.currentUser?.uid;
-    if (!uid || uid === 'guest') {
-      console.log('[FLUX Firebase Sync] Skipping sync — guest or unauthenticated user');
+    if (!uid || uid === 'guest' || uid.startsWith('guest_')) {
+      useNetworkStore.getState().setSyncStatus('local_only');
+      console.log('[FLUX Firebase Sync] Gated sync — guest or unauthenticated user');
       return false;
     }
     // Write to users/{uid}/{collectionName}/{docId} subcollection path
     // This matches Firestore rules: match /users/{userId}/{document=**}
     const docRef = doc(db, 'users', uid, collectionName, docId || 'user_data');
     await setDoc(docRef, { ...data, _userId: uid, _updatedAt: serverTimestamp() }, { merge: true });
+    useNetworkStore.getState().setLastSyncedAt(new Date().toISOString());
+    useNetworkStore.getState().setSyncStatus('synced');
     console.log(`[FLUX Firebase Sync] ✅ Firestore write success: users/${uid}/${collectionName}/${docId || 'user_data'}`);
     return true;
   } catch (err) {
+    useNetworkStore.getState().setSyncStatus('error');
     console.warn(`[FLUX Firebase Sync] Firestore write error for ${collectionName}/${docId}:`, err);
     throw err;
   }
@@ -118,6 +122,12 @@ export async function writeToFirebase(collectionName, docId, data) {
 
 export async function flushSyncQueue() {
   if (isFlushing) return;
+  const uid = auth.currentUser?.uid;
+  if (!uid || uid === 'guest' || uid.startsWith('guest_')) {
+    useNetworkStore.getState().setSyncStatus('local_only');
+    return;
+  }
+
   const { queue, dequeue, incrementRetry } = useSyncQueue.getState();
   const { isOnline, setSyncStatus } = useNetworkStore.getState();
 

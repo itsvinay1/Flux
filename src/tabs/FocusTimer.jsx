@@ -152,6 +152,7 @@ export default function FocusTimer() {
   const [sessionComplete, setSessionComplete] = useState(false);
   const intervalRef = useRef(null);
   const endTimeRef = useRef(null);
+  const startTimeRef = useRef(null);
 
   const progress = totalSeconds > 0 ? ((totalSeconds - secondsLeft) / totalSeconds) * 100 : 0;
 
@@ -189,31 +190,11 @@ export default function FocusTimer() {
     showToast(`Timer set to ${label}`, 'check');
   };
 
-  const handleComplete = useCallback(() => {
-    try {
-      setIsRunning(false);
-      setSessionComplete(true);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      const minsCompleted = Math.max(1, Math.round(totalSeconds / 60));
-      addFocusSession(minsCompleted, currentDistractions);
-      showToast(`Session complete! +${minsCompleted} points earned`, 'success');
-    } catch (err) {
-      console.warn('[FocusTimer] Completion notice:', err);
-    }
-  }, [totalSeconds, currentDistractions, addFocusSession]);
-
-  const handleStart = () => {
-    if (sessionComplete) { handleReset(); return; }
-    setIsRunning((p) => !p);
-  };
-
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     try {
       setIsRunning(false);
       endTimeRef.current = null;
+      startTimeRef.current = null;
       setSecondsLeft(totalSeconds);
       setSessionComplete(false);
       resetDistraction();
@@ -225,6 +206,57 @@ export default function FocusTimer() {
       }
     } catch (err) {
       console.warn('[FocusTimer] Reset notice:', err);
+    }
+  }, [totalSeconds, resetDistraction]);
+
+  const saveSession = useCallback((secondsCompleted) => {
+    const elapsedMins = Math.floor(secondsCompleted / 60);
+    if (elapsedMins < 1) {
+      showToast('Under a minute, not logged.', 'info');
+      handleReset();
+      return;
+    }
+
+    const startedAt = new Date(startTimeRef.current || (Date.now() - secondsCompleted * 1000)).toISOString();
+    const endedAt = new Date().toISOString();
+    const plannedMinutes = MODES[selectedMode]?.minutes || Math.round(totalSeconds / 60);
+
+    addFocusSession({
+      minutes: elapsedMins,
+      startedAt,
+      endedAt,
+      plannedMinutes,
+    }, currentDistractions);
+
+    showToast(`Session complete! +${elapsedMins} points earned`, 'success');
+    handleReset();
+  }, [selectedMode, totalSeconds, currentDistractions, addFocusSession, handleReset]);
+
+  const handleComplete = useCallback(() => {
+    try {
+      setIsRunning(false);
+      setSessionComplete(true);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      const elapsedSecs = totalSeconds - secondsLeft;
+      const actualSecs = elapsedSecs > 0 ? elapsedSecs : totalSeconds;
+      saveSession(actualSecs);
+    } catch (err) {
+      console.warn('[FocusTimer] Completion notice:', err);
+    }
+  }, [totalSeconds, secondsLeft, saveSession]);
+
+  const handleStart = () => {
+    if (sessionComplete) { handleReset(); return; }
+    if (!isRunning) {
+      if (!startTimeRef.current) {
+        startTimeRef.current = Date.now();
+      }
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
     }
   };
 
@@ -537,6 +569,33 @@ export default function FocusTimer() {
           )}
         </button>
       </div>
+
+      {/* Save early button when paused with progress */}
+      {!isRunning && secondsLeft < totalSeconds && !sessionComplete && (
+        <button
+          id="btn-save-progress"
+          onClick={() => saveSession(totalSeconds - secondsLeft)}
+          style={{
+            marginBottom: '24px',
+            padding: '10px 20px',
+            borderRadius: '16px',
+            background: 'rgba(14, 165, 233, 0.12)',
+            border: '1px solid rgba(14, 165, 233, 0.35)',
+            color: 'var(--accent-sky)',
+            fontWeight: 700,
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontFamily: 'Outfit, sans-serif',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <CheckCircle size={16} />
+          <span>Save what I did ({Math.floor((totalSeconds - secondsLeft) / 60)}m)</span>
+        </button>
+      )}
 
       {/* Focus Music - Built-in Tracks */}
       <div className="card" style={{ width: '100%', padding: '18px 20px', marginBottom: '24px' }}>

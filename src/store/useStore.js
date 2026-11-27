@@ -303,6 +303,7 @@ const useStore = create(
 
       // === Focus Sessions ===
       focusSessions: initialFocusData(),
+      focusLogs: [],
       currentSessionDistractions: 0,
 
       // === Active Multi-Goal System ===
@@ -734,9 +735,33 @@ const useStore = create(
         writeData('users', 'challenges', { challenges: get().activeChallenges });
       },
 
-      addFocusSession: (minutesFocused, distractions) => {
+      addFocusSession: (sessionData, distractions = 0) => {
+        const sessionObj = typeof sessionData === 'number'
+          ? { minutes: sessionData }
+          : (sessionData || {});
+
+        const minutesFocused = Number(sessionObj.minutes) || 0;
+        if (minutesFocused < 1) {
+          return false;
+        }
+
         const today = getLocalDateString();
         const isPerfect = distractions === 0;
+        const startedAt = sessionObj.startedAt || new Date(Date.now() - minutesFocused * 60000).toISOString();
+        const endedAt = sessionObj.endedAt || new Date().toISOString();
+        const plannedMinutes = sessionObj.plannedMinutes || minutesFocused;
+
+        const sessionLog = {
+          id: `fs_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          date: today,
+          minutes: minutesFocused,
+          hours: parseFloat((minutesFocused / 60).toFixed(2)),
+          startedAt,
+          endedAt,
+          plannedMinutes,
+          distractions,
+        };
+
         set((state) => {
           const existing = state.focusSessions.findIndex((s) => s.date === today);
           const hoursToAdd = minutesFocused / 60;
@@ -747,6 +772,7 @@ const useStore = create(
             updated = [...updated, { date: today, hours: parseFloat(hoursToAdd.toFixed(2)) }];
           }
           const boundedSessions = updated.slice(-365);
+          const updatedLogs = [...(state.focusLogs || []), sessionLog].slice(-500);
 
           // Accurate once-per-day streak calculation
           const lastActive = state.lastActiveDate;
@@ -770,6 +796,7 @@ const useStore = create(
 
           return {
             focusSessions: boundedSessions,
+            focusLogs: updatedLogs,
             streak: newStreak,
             isRestMode: false,
             lastActiveDate: today,
@@ -779,7 +806,8 @@ const useStore = create(
           };
         });
         get().addPoints(minutesFocused);
-        writeData('users', 'focus', { sessions: get().focusSessions, totalFocusMinutes: get().totalFocusMinutes });
+        writeData('users', 'focus', { sessions: get().focusSessions, totalFocusMinutes: get().totalFocusMinutes, logs: get().focusLogs });
+        return true;
       },
 
       incrementDistraction: () => set((s) => ({ currentSessionDistractions: s.currentSessionDistractions + 1 })),
@@ -857,6 +885,7 @@ const useStore = create(
         isRestMode: state.isRestMode,
         lastActiveDate: state.lastActiveDate,
         focusSessions: state.focusSessions,
+        focusLogs: state.focusLogs,
         activeChallenges: state.activeChallenges,
         selectedChallengeId: state.selectedChallengeId,
         journalEntries: state.journalEntries,

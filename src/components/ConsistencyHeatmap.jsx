@@ -1,36 +1,47 @@
 import React from 'react';
 import { getLocalDateString } from '../utils/dateUtils';
 
+const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
 export default function ConsistencyHeatmap({ focusSessions = [] }) {
-  // Generate 52 weeks (364 days) matrix
-  const days = [];
   const now = new Date();
-  
-  // Create mapping of date -> hours
+  const todayStr = getLocalDateString(now);
+
+  // Map of date -> hours
   const sessionMap = {};
   focusSessions.forEach((s) => {
     sessionMap[s.date] = s.hours;
   });
 
-  for (let i = 139; i >= 0; i--) { // Last 20 weeks (140 days) for clean mobile fit
+  // Monday = 0, ..., Sunday = 6
+  const currentDayOfWeek = (now.getDay() + 6) % 7;
+
+  // We show 20 weeks (140 days).
+  // Align start to Monday 19 weeks ago so row 0 is strictly Monday through row 6 Sunday.
+  const numWeeks = 20;
+  const days = [];
+  const startOffset = (numWeeks - 1) * 7 + currentDayOfWeek;
+
+  for (let i = startOffset; i >= (currentDayOfWeek - 6); i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     const dateStr = getLocalDateString(d);
+    const isFuture = dateStr > todayStr;
     const hrs = sessionMap[dateStr] || 0;
-    days.push({ date: dateStr, hours: hrs });
+    days.push({ date: dateStr, hours: hrs, isFuture });
   }
 
-  const getColor = (hrs) => {
+  const getColor = (hrs, isFuture) => {
+    if (isFuture) return 'rgba(255, 255, 255, 0.03)';
     if (hrs === 0) return 'var(--glass-border)';
-    if (hrs < 1) return '#bae6fd';
-    if (hrs < 2.5) return '#38bdf8';
-    if (hrs < 4) return '#0ea5e9';
+    if (hrs < 1.5) return '#7dd3fc';
+    if (hrs < 3.5) return '#0ea5e9';
     return '#0284c7';
   };
 
   return (
     <div className="card" style={{ padding: '20px' }}>
-      <div className="flex items-center justify-between mb-16">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
           <h3 style={{ fontWeight: 700, fontSize: '16px', color: 'var(--text-primary)' }}>
             Consistency Heatmap
@@ -39,36 +50,66 @@ export default function ConsistencyHeatmap({ focusSessions = [] }) {
             Last 20 Weeks Activity
           </p>
         </div>
-        <div style={{ display: 'flex', items: 'center', gap: '4px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>
+
+        {/* 4-Level Legend */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
           <span>Less</span>
-          {[0, 0.5, 2, 3.5, 5].map((h, idx) => (
-            <div key={idx} style={{ width: 10, height: 10, borderRadius: 3, background: getColor(h) }} />
-          ))}
+          <div title="0 hrs" style={{ width: 11, height: 11, borderRadius: 3, background: 'var(--glass-border)' }} />
+          <div title="< 1.5 hrs" style={{ width: 11, height: 11, borderRadius: 3, background: '#7dd3fc' }} />
+          <div title="1.5 - 3.5 hrs" style={{ width: 11, height: 11, borderRadius: 3, background: '#0ea5e9' }} />
+          <div title="> 3.5 hrs" style={{ width: 11, height: 11, borderRadius: 3, background: '#0284c7' }} />
           <span>More</span>
         </div>
       </div>
 
-      {/* Heatmap Grid (7 rows for days of week, columns for weeks) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateRows: 'repeat(7, 1fr)',
-        gridAutoFlow: 'column',
-        gap: '4px',
-        overflowX: 'auto',
-        paddingBottom: '6px',
-      }}>
-        {days.map((day) => (
-          <div
-            key={day.date}
-            title={`${day.date}: ${day.hours} hrs focus`}
-            style={{
-              width: '12px', height: '12px',
-              borderRadius: '3px',
-              background: getColor(day.hours),
-              transition: 'transform 0.15s ease',
-            }}
-          />
-        ))}
+      {/* Heatmap with Weekday initials on left */}
+      <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '6px' }}>
+        {/* Weekday Initials Column */}
+        <div style={{
+          display: 'grid',
+          gridTemplateRows: 'repeat(7, 12px)',
+          gap: '4px',
+          paddingRight: '2px',
+          userSelect: 'none',
+        }}>
+          {WEEKDAYS.map((initial, idx) => (
+            <div
+              key={idx}
+              style={{
+                fontSize: '9px',
+                fontWeight: 700,
+                color: 'var(--text-muted)',
+                lineHeight: '12px',
+                textAlign: 'center',
+                width: '10px',
+              }}
+            >
+              {initial}
+            </div>
+          ))}
+        </div>
+
+        {/* Grid of Weeks (7 rows: Monday to Sunday) */}
+        <div style={{
+          display: 'grid',
+          gridTemplateRows: 'repeat(7, 12px)',
+          gridAutoFlow: 'column',
+          gap: '4px',
+        }}>
+          {days.map((day) => (
+            <div
+              key={day.date}
+              title={day.isFuture ? `${day.date} (Upcoming)` : `${day.date}: ${day.hours} hrs focus`}
+              style={{
+                width: '12px', height: '12px',
+                borderRadius: '3px',
+                background: getColor(day.hours, day.isFuture),
+                border: day.isFuture ? '1px dashed rgba(255,255,255,0.08)' : 'none',
+                transition: 'transform 0.15s ease',
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
