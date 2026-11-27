@@ -1,16 +1,8 @@
-// Offline Trained Intelligence Engine & Gemini AI Integration
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-let genAI = null;
-
-if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
-  try {
-    genAI = new GoogleGenerativeAI(apiKey);
-  } catch (err) {
-    console.warn('[Gemini AI] Initialization error, falling back to offline mode:', err);
-  }
-}
+// Offline Trained Intelligence Engine
+// NOTE: Gemini API calls have been moved server-side to prevent key exposure.
+// The browser now uses only the offline keyword engine below.
+// To re-enable Gemini: implement a backend proxy at /api/coach/chat that
+// forwards requests with Firebase Auth verification and per-user rate limits.
 
 // 365+ built-in motivational quotes. Index is chosen by day-of-year, so it
 // rotates daily automatically without any network call.
@@ -391,21 +383,11 @@ export function getRoadmapTemplate(type) {
 
 import { getOfflineAIResponse } from './ai/knowledgeEngine';
 
+// All Gemini calls are now server-side only. The browser falls back to the
+// built-in offline knowledge engine so the app works without any network.
 export async function callGemini(prompt) {
-  if (genAI) {
-    try {
-      const sanitizedPrompt = String(prompt || '').slice(0, 2000);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(sanitizedPrompt);
-      const text = result.response.text();
-      if (text) {
-        return String(text).replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').trim();
-      }
-    } catch (err) {
-      console.warn('[Gemini AI] Call fallback activated');
-    }
-  }
-
+  // TODO: Call POST /api/coach/chat with Firebase Auth ID token for real AI.
+  // For now, serve the offline curated knowledge engine immediately.
   await new Promise((res) => setTimeout(res, 300));
   return getOfflineAIResponse(prompt);
 }

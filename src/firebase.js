@@ -1,22 +1,32 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics, isSupported } from 'firebase/analytics';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 import { getRemoteConfig, fetchAndActivate, getValue } from 'firebase/remote-config';
 import { getAuth, setPersistence, browserLocalPersistence, GoogleAuthProvider } from 'firebase/auth';
 
+// All config values MUST come from environment variables.
+// Never add || "hardcoded-fallback" here — doing so leaks credentials into the bundle.
+// Copy .env.example to .env and fill in real values from your Firebase console.
+const isTestEnv = typeof process !== 'undefined' && process.env.NODE_TEST_CONTEXT;
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCHd2jNiUEInS9cot_AMBsi6cAHkJsu-XU",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flux-9.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "flux-9",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "flux-9.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "984328987655",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:984328987655:web:1d849fa847cbe3228e76a2",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-08DLTS4PK7"
+  apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || (isTestEnv ? 'test-api-key-dummy' : undefined),
+  authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || (isTestEnv ? 'test-project' : undefined),
+  storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env?.VITE_FIREBASE_APP_ID || (isTestEnv ? '1:12345:web:abcdef' : undefined),
+  measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// Use initializeFirestore with persistentLocalCache (replaces deprecated enableIndexedDbPersistence)
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache(),
+});
+
 export const auth = getAuth(app);
 
 // Configure Local Session Persistence for reliable token retention across reloads
@@ -37,13 +47,15 @@ remoteConfig.defaultConfig = {
 };
 
 // Background fetch and activate remote config values
-fetchAndActivate(remoteConfig)
-  .then((activated) => {
-    console.log(`[Firebase Remote Config] Config fetched & activated (New changes: ${activated})`);
-  })
-  .catch((err) => {
-    console.warn('[Firebase Remote Config] Fetch skipped, using default config:', err);
-  });
+if (!isTestEnv && typeof window !== 'undefined') {
+  fetchAndActivate(remoteConfig)
+    .then((activated) => {
+      console.log(`[Firebase Remote Config] Config fetched & activated (New changes: ${activated})`);
+    })
+    .catch((err) => {
+      console.warn('[Firebase Remote Config] Fetch skipped, using default config:', err);
+    });
+}
 
 // Helper function to safely retrieve remote config string parameter
 export function getRemoteString(key) {
@@ -58,7 +70,7 @@ export function getRemoteString(key) {
 
 // Initialize Firebase Analytics safely (checks browser compatibility and user consent)
 export let analytics = null;
-const hasConsent = localStorage.getItem('flux-analytics-consent') === 'true';
+const hasConsent = typeof localStorage !== 'undefined' ? localStorage.getItem('flux-analytics-consent') === 'true' : false;
 
 if (hasConsent) {
   isSupported().then((supported) => {
@@ -66,19 +78,6 @@ if (hasConsent) {
       analytics = getAnalytics(app);
     }
   }).catch(() => {});
-}
-
-// Enable Offline IndexedDB Persistence for zero-latency performance
-try {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('[Firebase] Multiple tabs open, persistence enabled in primary tab.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('[Firebase] Browser does not support offline persistence.');
-    }
-  });
-} catch (e) {
-  console.warn('[Firebase] Persistence init skipped.');
 }
 
 export default app;

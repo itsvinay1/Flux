@@ -93,16 +93,22 @@ export const useSyncQueue = create(
 );
 
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { db, auth } from '../firebase.js';
 
 let isFlushing = false;
 
 export async function writeToFirebase(collectionName, docId, data) {
   try {
-    const uid = auth.currentUser?.uid || 'guest';
-    const docRef = doc(db, 'users', `${uid}_${collectionName}_${docId || 'user_data'}`);
+    const uid = auth.currentUser?.uid;
+    if (!uid || uid === 'guest') {
+      console.log('[FLUX Firebase Sync] Skipping sync — guest or unauthenticated user');
+      return false;
+    }
+    // Write to users/{uid}/{collectionName}/{docId} subcollection path
+    // This matches Firestore rules: match /users/{userId}/{document=**}
+    const docRef = doc(db, 'users', uid, collectionName, docId || 'user_data');
     await setDoc(docRef, { ...data, _userId: uid, _updatedAt: serverTimestamp() }, { merge: true });
-    console.log(`[FLUX Firebase Sync] ✅ Firestore write success: users/${uid}_${collectionName}_${docId || 'user_data'}`);
+    console.log(`[FLUX Firebase Sync] ✅ Firestore write success: users/${uid}/${collectionName}/${docId || 'user_data'}`);
     return true;
   } catch (err) {
     console.warn(`[FLUX Firebase Sync] Firestore write error for ${collectionName}/${docId}:`, err);

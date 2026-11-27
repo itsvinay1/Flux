@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { writeData } from '../sync/syncManager';
-import { auth } from '../firebase';
+import { writeData } from '../sync/syncManager.js';
+import { auth } from '../firebase.js';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { getLocalDateString, isYesterday } from '../utils/dateUtils.js';
 
 // ─── Level System ─────────────────────────────────────────────────────────────
 const LEVEL_THRESHOLDS = [0, 300, 800, 1800, 3500, 6000, 10000, 16000, 25000, 38000, 55000];
@@ -55,7 +56,7 @@ const initialFocusData = () => {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     days.push({
-      date: d.toISOString().split('T')[0],
+      date: getLocalDateString(d),
       hours: 0,
     });
   }
@@ -83,7 +84,7 @@ const DEFAULT_COURSES = [
                 id: 'top_bst',
                 title: 'Binary Search Trees & Balancing',
                 subTopics: [
-                  { id: 'st_bst_1', title: 'BST Insertion & Deletion Properties', completed: true },
+                  { id: 'st_bst_1', title: 'BST Insertion & Deletion Properties', completed: false },
                   { id: 'st_bst_2', title: 'AVL Tree Single & Double Rotations', completed: false },
                   { id: 'st_bst_3', title: 'Red-Black Tree Black Height Invariant', completed: false }
                 ]
@@ -92,7 +93,7 @@ const DEFAULT_COURSES = [
                 id: 'top_heaps',
                 title: 'Heap Data Structures & Priority Queues',
                 subTopics: [
-                  { id: 'st_heap_1', title: 'Min-Heapify & Max-Heapify Operations', completed: true },
+                  { id: 'st_heap_1', title: 'Min-Heapify & Max-Heapify Operations', completed: false },
                   { id: 'st_heap_2', title: 'Build-Heap O(N) Time Proof', completed: false }
                 ]
               }
@@ -106,7 +107,7 @@ const DEFAULT_COURSES = [
                 id: 'top_traversals',
                 title: 'BFS & DFS Applications',
                 subTopics: [
-                  { id: 'st_g_1', title: 'Cycle Detection in Directed & Undirected Graphs', completed: true },
+                  { id: 'st_g_1', title: 'Cycle Detection in Directed & Undirected Graphs', completed: false },
                   { id: 'st_g_2', title: 'Dijkstra & Bellman-Ford Shortest Paths', completed: false }
                 ]
               }
@@ -127,7 +128,7 @@ const DEFAULT_COURSES = [
                 id: 'top_deadlocks',
                 title: 'Deadlock Prevention & Banker Algorithm',
                 subTopics: [
-                  { id: 'st_os_1', title: 'Four Necessary Conditions for Deadlock', completed: true },
+                  { id: 'st_os_1', title: 'Four Necessary Conditions for Deadlock', completed: false },
                   { id: 'st_os_2', title: 'Banker Safety State Checking Algorithm', completed: false }
                 ]
               }
@@ -156,7 +157,7 @@ const DEFAULT_COURSES = [
                 id: 'top_eigen',
                 title: 'Eigenvalues & Eigenvectors',
                 subTopics: [
-                  { id: 'st_la_1', title: 'Characteristic Equation & Trace/Det Theorem', completed: true },
+                  { id: 'st_la_1', title: 'Characteristic Equation & Trace/Det Theorem', completed: false },
                   { id: 'st_la_2', title: 'Cayley-Hamilton Theorem Applications', completed: false }
                 ]
               }
@@ -170,7 +171,7 @@ const DEFAULT_COURSES = [
 
 const DEFAULT_TODOS = [
   { id: 't_1', title: 'Solve 15 GATE PYQs on Binary Search Trees', completed: false, priority: 'high', category: 'Study' },
-  { id: 't_2', title: 'Complete 45-minute Deep Focus Session', completed: true, priority: 'medium', category: 'Focus' },
+  { id: 't_2', title: 'Complete 45-minute Deep Focus Session', completed: false, priority: 'medium', category: 'Focus' },
   { id: 't_3', title: 'Review Operating Systems Synchronization Notes', completed: false, priority: 'normal', category: 'Revision' },
 ];
 
@@ -181,7 +182,7 @@ const DEFAULT_INITIAL_GOALS = [
     emoji: '🎓',
     description: 'Master engineering math, PYQs, and technical concepts daily.',
     totalDays: 90,
-    completedDays: 1,
+    completedDays: 0,
     milestones: [
       { id: 'm_gate_1', title: 'GATE Maths & General Aptitude Drills', time: '7:00 AM', duration: '60 min', completed: false, points: 50 },
       { id: 'm_gate_2', title: 'Core Technical Subject Deep Study', time: '9:30 AM', duration: '90 min', completed: false, points: 90 },
@@ -195,7 +196,7 @@ const DEFAULT_INITIAL_GOALS = [
     emoji: '🧠',
     description: 'Build an unbreakable focus habit over 60 days.',
     totalDays: 60,
-    completedDays: 1,
+    completedDays: 0,
     milestones: [
       { id: 'm_dw_1', title: 'Morning pages (10 min journaling)', time: '7:00 AM', duration: '10 min', completed: false, points: 15 },
       { id: 'm_dw_2', title: 'Deep work block #1 (no distractions)', time: '9:00 AM', duration: '90 min', completed: false, points: 90 },
@@ -271,9 +272,10 @@ const useStore = create(
       // === Gamification & Streak ===
       streak: 0,
       points: 0,
-      streakFreezeTokens: 2,
+      streakFreezeTokens: 0,
       isRestMode: false,
-      lastActiveDate: new Date().toISOString().split('T')[0],
+      lastActiveDate: getLocalDateString(),
+      awardedTaskIds: {},
 
       activateStreakFreeze: () => {
         const state = get();
@@ -504,7 +506,10 @@ const useStore = create(
         writeData('users', 'courses', { courses: get().courses });
       },
       toggleSubTopicComplete: (courseId, subjectId, chapterId, topicId, subTopicId) => {
+        const state = get();
+        const alreadyAwarded = !!(state.awardedTaskIds && state.awardedTaskIds[subTopicId]);
         let earned = false;
+
         set((s) => ({
           courses: s.courses.map((c) => c.id === courseId ? {
             ...c,
@@ -517,7 +522,7 @@ const useStore = create(
                   subTopics: (tp.subTopics || []).map((st) => {
                     if (st.id === subTopicId) {
                       const next = !st.completed;
-                      if (next) earned = true;
+                      if (next && !alreadyAwarded) earned = true;
                       return { ...st, completed: next };
                     }
                     return st;
@@ -526,6 +531,7 @@ const useStore = create(
               } : ch),
             } : sub),
           } : c),
+          awardedTaskIds: earned ? { ...(s.awardedTaskIds || {}), [subTopicId]: true } : s.awardedTaskIds,
         }));
         if (earned) {
           get().addPoints(15);
@@ -550,16 +556,20 @@ const useStore = create(
         writeData('users', 'todos', { todos: get().todos });
       },
       toggleTodo: (todoId) => {
+        const state = get();
+        const alreadyAwarded = !!(state.awardedTaskIds && state.awardedTaskIds[todoId]);
         let earned = false;
+
         set((s) => ({
           todos: s.todos.map((t) => {
             if (t.id === todoId) {
               const next = !t.completed;
-              if (next) earned = true;
+              if (next && !alreadyAwarded) earned = true;
               return { ...t, completed: next };
             }
             return t;
           }),
+          awardedTaskIds: earned ? { ...(s.awardedTaskIds || {}), [todoId]: true } : s.awardedTaskIds,
         }));
         if (earned) {
           get().addPoints(10);
@@ -592,7 +602,7 @@ const useStore = create(
       addPoints: (amount) => {
         set((state) => {
           const newPoints = state.points + amount;
-          const today = new Date().toISOString().split('T')[0];
+          const today = getLocalDateString();
           return { points: newPoints, lastActiveDate: today };
         });
         get().checkAchievements();
@@ -725,7 +735,7 @@ const useStore = create(
       },
 
       addFocusSession: (minutesFocused, distractions) => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDateString();
         const isPerfect = distractions === 0;
         set((state) => {
           const existing = state.focusSessions.findIndex((s) => s.date === today);
@@ -737,9 +747,32 @@ const useStore = create(
             updated = [...updated, { date: today, hours: parseFloat(hoursToAdd.toFixed(2)) }];
           }
           const boundedSessions = updated.slice(-365);
+
+          // Accurate once-per-day streak calculation
+          const lastActive = state.lastActiveDate;
+          let newStreak = state.streak;
+          if (!lastActive) {
+            newStreak = 1;
+          } else if (lastActive === today) {
+            // Already active today — keep existing streak
+            newStreak = state.streak || 1;
+          } else if (isYesterday(lastActive)) {
+            // Consecutive day!
+            newStreak = state.streak + 1;
+          } else {
+            // Missed days: check if streak freeze was active
+            if (state.isRestMode) {
+              newStreak = state.streak + 1;
+            } else {
+              newStreak = 1;
+            }
+          }
+
           return {
             focusSessions: boundedSessions,
-            streak: state.streak + 1,
+            streak: newStreak,
+            isRestMode: false,
+            lastActiveDate: today,
             totalFocusMinutes: state.totalFocusMinutes + minutesFocused,
             perfectFocusSessions: isPerfect ? state.perfectFocusSessions + 1 : state.perfectFocusSessions,
             currentSessionDistractions: 0,
@@ -783,10 +816,27 @@ const useStore = create(
         }));
       },
 
-      clearAllData: () => {
-        ['flux-storage-v5', 'flux-sync-queue', 'flux-onboarding-done', 'flux-ai-cache', 'flux-ai-rates'].forEach((k) => {
-          localStorage.removeItem(k);
-        });
+      clearAllData: async () => {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+          // Clear IndexedDB databases
+          if (window.indexedDB && window.indexedDB.databases) {
+            const databases = await window.indexedDB.databases();
+            for (const dbInfo of databases) {
+              if (dbInfo.name) window.indexedDB.deleteDatabase(dbInfo.name);
+            }
+          }
+          // Clear service worker caches
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+          // Firebase sign-out
+          await firebaseSignOut(auth);
+        } catch (e) {
+          console.warn('[FLUX Data Wipe] Notice during wipe:', e);
+        }
         window.location.reload();
       },
     }),
@@ -803,6 +853,8 @@ const useStore = create(
         unlockedAchievements: state.unlockedAchievements,
         streak: state.streak,
         points: state.points,
+        streakFreezeTokens: state.streakFreezeTokens,
+        isRestMode: state.isRestMode,
         lastActiveDate: state.lastActiveDate,
         focusSessions: state.focusSessions,
         activeChallenges: state.activeChallenges,
@@ -812,6 +864,10 @@ const useStore = create(
         currentSessionDistractions: state.currentSessionDistractions,
         courses: state.courses,
         todos: state.todos,
+        awardedTaskIds: state.awardedTaskIds,
+        isAuthenticated: state.isAuthenticated,
+        userId: state.userId,
+        userEmail: state.userEmail,
       }),
     }
   )

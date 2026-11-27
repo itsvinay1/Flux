@@ -3,20 +3,19 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── User Data (private per user) ──────────────────────────────────────────
-    // Each user can only read/write their own document and all sub-collections
-    match /users/{userId} {
+    // Each authenticated user can only read/write their own document tree.
+    // The sync path is users/{uid}/{collection}/{docId} — subcollection wildcard covers all.
+    match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      match /{allSubcollections=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
     }
 
     // ── Real-time Leaderboard ─────────────────────────────────────────────────
-    // Any authenticated user can READ leaderboard (for rankings display)
-    // Only the document OWNER (uid == docId) can WRITE their own entry
+    // Writes are disabled client-side — scores must be computed server-side via
+    // Cloud Functions to prevent cheating (client-written points/XP exploit).
+    // READ is restricted to the user's own entry until friend/group scope is implemented.
     match /leaderboard/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // Server-only via Cloud Functions
     }
 
     // ── Deny All Unmatched ────────────────────────────────────────────────────

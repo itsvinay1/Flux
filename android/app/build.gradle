@@ -7,8 +7,8 @@ android {
         applicationId "com.flux.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode System.getenv("BUILD_NUMBER") ? System.getenv("BUILD_NUMBER").toInteger() : 29
-        versionName "1.0.29"
+        versionCode System.getenv("BUILD_NUMBER") ? System.getenv("BUILD_NUMBER").toInteger() : 30
+        versionName "1.0.30"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -18,7 +18,11 @@ android {
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            // signingConfig is intentionally omitted here.
+            // Sign the APK externally with a keystore stored OUTSIDE the repo.
+            // Provide FLUX_KEYSTORE_PATH, FLUX_KEY_ALIAS, FLUX_KEY_PASSWORD,
+            // FLUX_STORE_PASSWORD as CI environment variables or sign manually:
+            //   jarsigner -keystore /path/to/release.keystore app-release-unsigned.apk alias
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

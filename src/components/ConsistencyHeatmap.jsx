@@ -1,4 +1,5 @@
 import React from 'react';
+import { getLocalDateString } from '../utils/dateUtils';
 
 export default function ConsistencyHeatmap({ focusSessions = [] }) {
   // Generate 52 weeks (364 days) matrix
@@ -14,7 +15,7 @@ export default function ConsistencyHeatmap({ focusSessions = [] }) {
   for (let i = 139; i >= 0; i--) { // Last 20 weeks (140 days) for clean mobile fit
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(d);
     const hrs = sessionMap[dateStr] || 0;
     days.push({ date: dateStr, hours: hrs });
   }

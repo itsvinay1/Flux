@@ -25,3 +25,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Sensitive signing files - NEVER commit keystores or keys
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# Release APKs - use GitHub Releases instead
+docs/releases/*.apk
+*.idsig
+
+# Android secrets
+android/app/google-services.json

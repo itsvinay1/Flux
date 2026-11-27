@@ -177,26 +177,18 @@ export default function Tribe({ onNavigate }) {
     return () => { window.removeEventListener('online', up); window.removeEventListener('offline', dn); };
   }, []);
 
-  // Write current user's score to Firestore whenever points/streak changes
-  useEffect(() => {
-    const uid = auth.currentUser?.uid || userId;
-    if (!uid || uid.startsWith('guest_')) return; // guests don't appear on leaderboard
+  // Leaderboard scoring is handled server-side to prevent client cheating.
+  // Direct client writes to /leaderboard are intentionally disabled.
 
-    const level = getLevel ? getLevel() : 1;
-    const docRef = doc(db, 'leaderboard', uid);
-    setDoc(docRef, {
-      name: userName || 'Scholar',
-      avatar: userAvatar || '⚡',
-      points: points || 0,
-      streak: streak || 0,
-      level,
-      updatedAt: serverTimestamp(),
-    }, { merge: true }).catch(() => {});
-  }, [points, streak, userName, userAvatar]);
-
-  // Subscribe to real-time leaderboard
+  // Subscribe to real-time leaderboard with 4s timeout fallback
   useEffect(() => {
     setLbLoading(true);
+    setLbError(false);
+
+    const safetyTimer = setTimeout(() => {
+      setLbLoading(false);
+    }, 4000);
+
     try {
       const q = query(
         collection(db, 'leaderboard'),
@@ -206,6 +198,7 @@ export default function Tribe({ onNavigate }) {
       const unsub = onSnapshot(
         q,
         (snap) => {
+          clearTimeout(safetyTimer);
           const uid = auth.currentUser?.uid || userId;
           const docs = snap.docs.map((d) => ({
             id: d.id,
@@ -218,18 +211,21 @@ export default function Tribe({ onNavigate }) {
           setLastUpdated(new Date());
         },
         (err) => {
-          console.warn('[FLUX Leaderboard] Firestore error:', err);
-          setLbError(true);
+          clearTimeout(safetyTimer);
+          console.warn('[FLUX Leaderboard] Real-time rankings notice:', err);
           setLbLoading(false);
         }
       );
       unsubRef.current = unsub;
     } catch (e) {
-      setLbError(true);
+      clearTimeout(safetyTimer);
       setLbLoading(false);
     }
 
-    return () => { if (unsubRef.current) unsubRef.current(); };
+    return () => { 
+      clearTimeout(safetyTimer);
+      if (unsubRef.current) unsubRef.current(); 
+    };
   }, [userId]);
 
   // Build final sorted leaderboard - always include self even if doc not yet indexed
@@ -381,7 +377,7 @@ export default function Tribe({ onNavigate }) {
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {myRank > 0 && (
+              {!lbLoading && !lbError && finalBoard.length > 1 && myRank > 0 && (
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-sky)', background: 'rgba(14,165,233,0.1)', padding: '3px 8px', borderRadius: 6 }}>
                   Your Rank: #{myRank}
                 </span>

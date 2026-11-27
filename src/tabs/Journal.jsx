@@ -209,7 +209,7 @@ export default function Journal() {
   const addJournalEntry = useStore((s) => s.addJournalEntry);
 
   const [text, setText] = useState('');
-  const [rating, setRating] = useState(3);
+  const [rating, setRating] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
 
   const handleAnalyze = () => {
@@ -218,7 +218,7 @@ export default function Journal() {
     setTimeout(() => {
       addJournalEntry(text, rating, getJournalInsight());
       setText('');
-      setRating(3);
+      setRating(0);
       setAnalyzing(false);
       showToast('Entry saved with coach insight', 'info');
     }, 1100);
@@ -228,13 +228,14 @@ export default function Journal() {
     if (!text.trim()) return;
     addJournalEntry(text, rating, null);
     setText('');
-    setRating(3);
+    setRating(0);
     showToast('Journal entry saved', 'info');
   };
 
   const totalEntries = journalEntries.length;
-  const avgRating = totalEntries > 0
-    ? (journalEntries.reduce((a, e) => a + (e.rating || 3), 0) / totalEntries).toFixed(1)
+  const ratedEntries = journalEntries.filter((e) => (e.rating || 0) > 0);
+  const avgRating = ratedEntries.length > 0
+    ? (ratedEntries.reduce((a, e) => a + e.rating, 0) / ratedEntries.length).toFixed(1)
     : 'N/A';
 
   return (

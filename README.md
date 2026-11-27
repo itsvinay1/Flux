@@ -6,12 +6,12 @@
 [![Vite 8](https://img.shields.io/badge/Vite-8.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Firebase 12](https://img.shields.io/badge/Firebase-12.16-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Capacitor 8](https://img.shields.io/badge/Capacitor-8.4-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)](https://capacitorjs.com/)
-[![Security Hardened](https://img.shields.io/badge/Security-OWASP_ASVS_Passed-10B981?style=for-the-badge&logo=shield&logoColor=white)](#-security--privacy-architecture)
+[![Security Hardened](https://img.shields.io/badge/Security-Hardened_v1.0.30-10B981?style=for-the-badge&logo=shield&logoColor=white)](#-security--privacy-architecture)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 **FLUX** is an offline-first daily focus, habit building, syllabus tracking, and exam productivity application designed specifically for serious students and self-learners (GATE, NEET, JEE, UPSC, Boards).
 
-### 📱 [📥 Download Android SIGNED APK (v1.0.29)](docs/releases/FLUX-v1.0.29-Signed.apk)
+### 📱 [📥 Download Android SIGNED APK (v1.0.30)](https://github.com/itsvinay1/Flux/releases)
 
 [Download APK](#-download-android-signed-apk) • [Features](#-key-features) • [Screenshots](#-authentic-app-screens-showcase) • [Architecture](#-architecture--tech-stack) • [Installation](#-getting-started) • [Security](#-security--privacy-architecture)
 
@@ -21,10 +21,10 @@
 
 ## 📥 Download Android Signed APK
 
-Download the fully signed, installable Android APK directly from the repository:
+Download the fully signed, installable Android APK from GitHub Releases:
 
-- 📦 **Latest Production Release**: [`FLUX-v1.0.29-Signed.apk`](docs/releases/FLUX-v1.0.29-Signed.apk) *(Signed APK - Installs on any Android device)*
-- 🔒 **Signing Verification**: Digitally signed with Android v1+v2 APK signature scheme, enabling direct 1-tap installation on Android without "App not installed" errors.
+- 📦 **Latest Production Release**: [**FLUX v1.0.30 on GitHub Releases**](https://github.com/itsvinay1/Flux/releases) *(Signed APK - Installs on any Android device)*
+- 🔒 **Signing Verification**: Digitally signed with Android APK signature scheme, enabling direct 1-tap installation on Android without "App not installed" errors.
 - 📱 **Compatibility**: Android 8.0+ (API 26 and above).
 
 ---
@@ -190,10 +190,11 @@ flux-app/
 
 FLUX is built with complete user data privacy and security standards:
 
-- 🔒 **Zero Hardcoded Secrets**: All keys are loaded dynamically via `import.meta.env`. `.env` files are strictly ignored.
-- 🛡️ **Per-User Isolation**: Firestore sync documents are isolated by user UID (`users/${uid}_...`).
-- 🌐 **Content Security Policy (CSP)**: `index.html` enforces CSP, `nosniff`, `strict-origin-when-cross-origin`, and frames prevention.
-- 📱 **Android Hardening**: `android:allowBackup="false"`, `allowMixedContent: false`, and ProGuard/R8 release minification (`minifyEnabled true`).
+- 🔒 **Dynamic Environment Secrets**: All production API keys are loaded via `import.meta.env` with zero hardcoded fallbacks. Signing keys are kept strictly outside the repository.
+- 🛡️ **Per-User Subcollection Isolation**: Firestore sync paths are isolated under `users/{userId}/{collectionName}/{docId}` with strict owner-only read/write rules.
+- 🌐 **Hardened Content Security Policy**: Enforces strict script-src and style-src boundaries.
+- 📱 **Android Hardening**: `android:allowBackup="false"`, `allowMixedContent: false`, ProGuard/R8 minification, and release signing separation.
+- 🧹 **Comprehensive Local Data Wipe**: Complete one-tap wipe of localStorage, IndexedDB, caches, and Firebase Auth sessions.
 
 ---
 

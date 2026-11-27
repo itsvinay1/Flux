@@ -212,9 +212,15 @@ function SyncStatusBar() {
   const syncStatus = useNetworkStore((s) => s.syncStatus);
   const pendingChanges = useNetworkStore((s) => s.pendingChanges);
   const lastSyncedAt = useNetworkStore((s) => s.lastSyncedAt);
+  const isAuthenticated = useStore((s) => s.isAuthenticated);
 
   const statusConfig = {
-    synced:  { color: '#10b981', bg: '#ecfdf5', icon: <Wifi size={14} />,       label: 'All data backed up' },
+    synced:  { 
+      color: isAuthenticated ? '#10b981' : '#64748b', 
+      bg: isAuthenticated ? '#ecfdf5' : 'rgba(255,255,255,0.04)', 
+      icon: <Wifi size={14} />,       
+      label: isAuthenticated ? 'All data backed up' : 'Guest mode — local only (sign in to sync)' 
+    },
     syncing: { color: '#0ea5e9', bg: '#e0f2fe', icon: <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />, label: 'Syncing...' },
     pending: { color: '#f59e0b', bg: '#fffbeb', icon: <WifiOff size={14} />,     label: `${pendingChanges} changes pending` },
     error:   { color: '#ef4444', bg: '#fef2f2', icon: <WifiOff size={14} />,     label: 'Sync error - will retry' },

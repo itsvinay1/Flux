@@ -4,7 +4,6 @@ import { showToast } from './Toast';
 import { ShieldCheck, Clock, Mail, Lock, User, Sparkles, LogIn, UserPlus } from 'lucide-react';
 import { 
   signInWithPopup, 
-  signInWithCredential, 
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -24,7 +23,6 @@ export default function AuthModal({ onComplete }) {
   const [error, setError] = useState('');
   const [timeLeft, setTimeLeft] = useState(25);
   
-  const googleBtnRef = useRef(null);
   const timerRef = useRef(null);
   const countdownRef = useRef(null);
 
@@ -67,57 +65,6 @@ export default function AuthModal({ onComplete }) {
     if (countdownRef.current) clearInterval(countdownRef.current);
   };
 
-  // Initialize Google Identity Services (GSI In-App Native Auth)
-  useEffect(() => {
-    if (authTab === 'google' && window.google?.accounts?.id && googleBtnRef.current) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: '984328987655-1d849fa847cbe3228e76a2.apps.googleusercontent.com',
-          callback: async (response) => {
-            if (response && response.credential) {
-              setLoading(true);
-              startAuthCycleTimer();
-              try {
-                const credential = GoogleAuthProvider.credential(response.credential);
-                const res = await signInWithCredential(auth, credential);
-                stopAuthCycleTimer();
-                if (res && res.user) {
-                  const displayName = res.user.displayName || 'Flux Scholar';
-                  updateProfile({
-                    userName: displayName,
-                    isAuthenticated: true,
-                    userId: res.user.uid,
-                    userEmail: res.user.email,
-                    userAvatar: res.user.photoURL || '⚡',
-                  });
-                  showToast(`Google Authentication successful! Welcome ${displayName}! 🚀`, '✨');
-                  onComplete && onComplete();
-                }
-              } catch (credErr) {
-                stopAuthCycleTimer();
-                console.warn('[FLUX GSI] Credential login error:', credErr);
-                setError('Google Credential auth error. Please try again.');
-              } finally {
-                setLoading(false);
-              }
-            }
-          },
-          auto_select: false,
-        });
-
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
-          theme: 'filled_blue',
-          size: 'large',
-          width: 320,
-          shape: 'pill',
-          text: 'continue_with',
-        });
-      } catch (gsiErr) {
-        console.warn('[FLUX GSI] Setup notice:', gsiErr);
-      }
-    }
-  }, [authTab]);
-
   const doPopupSignIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -159,20 +106,7 @@ export default function AuthModal({ onComplete }) {
     setError('');
     setLoading(true);
     startAuthCycleTimer();
-
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            doPopupSignIn();
-          }
-        });
-      } catch (e) {
-        doPopupSignIn();
-      }
-    } else {
-      doPopupSignIn();
-    }
+    await doPopupSignIn();
   };
 
   // Firebase Email/Password Handler (Login & Signup)
@@ -188,11 +122,8 @@ export default function AuthModal({ onComplete }) {
         setError('Please enter your full name.');
         return;
       }
-      const cleanEmail = email.trim().toLowerCase();
-      if (!cleanEmail.endsWith('@gmail.com')) {
-        setError('Only official @gmail.com email addresses are allowed for registration to prevent ghost & temporary mail users 🛡️');
-        return;
-      }
+      // Removed @gmail.com restriction — any valid email can register.
+      // Backend enforces email verification via Firebase Auth's sendEmailVerification().
     }
 
     setError('');
@@ -363,8 +294,6 @@ export default function AuthModal({ onComplete }) {
         {/* TAB 1: GOOGLE AUTH */}
         {authTab === 'google' && (
           <div>
-            <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', minHeight: '44px' }} />
-
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
@@ -461,7 +390,7 @@ export default function AuthModal({ onComplete }) {
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                 <input
                   type="email"
-                  placeholder={emailMode === 'signup' ? "yourname@gmail.com" : "name@example.com"}
+                  placeholder={emailMode === 'signup' ? "your@email.com" : "name@example.com"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -474,7 +403,7 @@ export default function AuthModal({ onComplete }) {
               </div>
               {emailMode === 'signup' && (
                 <p style={{ fontSize: '11px', color: '#38bdf8', marginTop: '6px', fontWeight: 600, lineHeight: 1.4 }}>
-                  Only <b>@gmail.com</b> addresses are accepted. Temporary or disposable email domains are not permitted.
+                  Any valid email address is accepted.
                 </p>
               )}
             </div>

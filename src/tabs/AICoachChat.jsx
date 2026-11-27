@@ -95,12 +95,12 @@ export default function AICoachChat() {
       <div className="page-header" style={{ paddingBottom: '12px', borderBottom: '1px solid var(--glass-border)', marginBottom: '16px' }}>
         <div>
           <h1 className="page-title" style={{ fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bot color="var(--accent-sky)" size={22} /> AI Coach
+            <Bot color="var(--accent-sky)" size={22} /> Mindset Coach
           </h1>
-          <p className="page-subtitle">Accountability and mindset guidance</p>
+          <p className="page-subtitle">Curated Offline Guidance · Stoic & Focus Strategies</p>
         </div>
-        <span className="badge badge-primary" style={{ alignSelf: 'center' }}>
-          <Zap size={12} /> Active
+        <span className="badge badge-secondary" style={{ alignSelf: 'center', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Zap size={12} color="#38bdf8" /> Offline Engine
         </span>
       </div>
 

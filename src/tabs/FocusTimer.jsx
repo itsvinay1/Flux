@@ -151,6 +151,7 @@ export default function FocusTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
   const intervalRef = useRef(null);
+  const endTimeRef = useRef(null);
 
   const progress = totalSeconds > 0 ? ((totalSeconds - secondsLeft) / totalSeconds) * 100 : 0;
 
@@ -212,6 +213,7 @@ export default function FocusTimer() {
   const handleReset = () => {
     try {
       setIsRunning(false);
+      endTimeRef.current = null;
       setSecondsLeft(totalSeconds);
       setSessionComplete(false);
       resetDistraction();
@@ -266,6 +268,9 @@ export default function FocusTimer() {
 
   useEffect(() => {
     if (isRunning) {
+      // Calculate absolute target end timestamp to survive Android background suspend
+      endTimeRef.current = Date.now() + secondsLeft * 1000;
+
       try {
         const track = FOCUS_TRACKS.find((t) => t.id === activeSound);
         if (track && track.src && audioRef.current) {
@@ -274,33 +279,45 @@ export default function FocusTimer() {
         }
       } catch (e) {}
 
-      intervalRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            setTimeout(() => {
-              try {
-                audioEngine.stopAll();
-                if (audioRef.current) audioRef.current.pause();
-                handleComplete();
-              } catch (e) {}
-            }, 0);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      const checkTime = () => {
+        if (!endTimeRef.current) return;
+        const now = Date.now();
+        const diffMs = endTimeRef.current - now;
+        const remaining = Math.max(0, Math.round(diffMs / 1000));
+        setSecondsLeft(remaining);
+
+        if (remaining <= 0) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          try {
+            audioEngine.stopAll();
+            if (audioRef.current) audioRef.current.pause();
+            handleComplete();
+          } catch (e) {}
+        }
+      };
+
+      intervalRef.current = setInterval(checkTime, 1000);
+
+      // Resync immediately when app is brought back from background
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && isRunning) {
+          checkTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        try { audioEngine.stopAll(); } catch (e) {}
+        if (audioRef.current) audioRef.current.pause();
+      };
     } else {
+      endTimeRef.current = null;
       if (intervalRef.current) clearInterval(intervalRef.current);
       try { audioEngine.stopAll(); } catch (e) {}
       if (audioRef.current) audioRef.current.pause();
     }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      try { audioEngine.stopAll(); } catch (e) {}
-      if (audioRef.current) audioRef.current.pause();
-    };
   }, [isRunning, activeSound, handleComplete]);
 
   return (
